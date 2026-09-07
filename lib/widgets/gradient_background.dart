@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../utils/theme_config.dart';
 import '../viewmodels/theme_providers.dart';
 
 /// 全局背景：柔和渐变 + 淡光斑（清爽记账风；支持多套背景主题切换）
