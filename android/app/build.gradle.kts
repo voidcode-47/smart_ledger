@@ -51,3 +51,9 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // 中文 OCR 模型（google_mlkit_text_recognition 插件将其声明为 compileOnly，
+    // 必须由宿主应用显式添加才会把模型打包进 APK；缺失时无 GMS 设备上识别会原生崩溃）
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+}
