@@ -16,24 +16,35 @@ class QuoteCard extends StatefulWidget {
 }
 
 class _QuoteCardState extends State<QuoteCard> {
+  /// 会话级远程格言缓存：同一会话内联网获取一次后不再重复刷新，
+  /// 避免切页/滚动重建时格言频繁变化
+  static QuoteItem? _remoteCache;
+
   late QuoteItem _quote;
   bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _quote = QuoteUtils.random();
-    _tryRemote();
+    if (_remoteCache != null) {
+      _quote = _remoteCache!;
+    } else {
+      _quote = QuoteUtils.random();
+      _tryRemote();
+    }
   }
 
-  /// 联网刷新：优先一言，失败回退本地
+  /// 联网获取：成功则更新缓存与当前显示；失败/无网回退本地随机
   Future<void> _tryRemote() async {
     if (_loading) return;
     setState(() => _loading = true);
     final remote = await QuoteFetcher.fetchRemote();
     if (!mounted) return;
     setState(() {
-      if (remote != null) _quote = remote;
+      if (remote != null) {
+        _quote = remote;
+        _remoteCache = remote;
+      }
       _loading = false;
     });
   }

@@ -25,26 +25,43 @@ class ReceiptOcrResult {
   final String note;
 }
 
+/// OCR 识别失败（含可读提示），由调用方捕获后展示
+class OcrException implements Exception {
+  const OcrException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 /// 图片识别服务：Android 使用本地 ML Kit OCR（免费、离线）
 class ReceiptOcrService {
   ReceiptOcrService._();
 
   /// 是否支持（当前 OCR 引擎仅 Android）
-  static bool get supported => Platform.isAndroid;
-
-  /// 识别图片：本地 OCR + 规则解析
+  static bool get supported => Platform.isAndroid;  /// 识别图片：本地 OCR + 规则解析。
+  /// 任何异常（模型加载失败、图片过大等）都会被转换为带提示的 [OcrException]，
+  /// 由调用方捕获展示，避免未捕获异常导致应用闪退。
   static Future<ReceiptOcrResult> recognize(XFile image) async {
-    final recognizer =
-        TextRecognizer(script: TextRecognitionScript.chinese);
+    TextRecognizer? recognizer;
     try {
+      recognizer =
+          TextRecognizer(script: TextRecognitionScript.chinese);
       final input = InputImage.fromFilePath(image.path);
       final text = await recognizer.processImage(input);
       final raw = text.blocks
           .map((b) => b.lines.map((l) => l.text).join(' '))
           .join('\n');
       return parse(raw);
+    } on OcrException {
+      rethrow;
+    } catch (e) {
+      throw OcrException('识别引擎出错：$e');
     } finally {
-      recognizer.close();
+      try {
+        recognizer?.close();
+      } catch (_) {}
     }
   }
 

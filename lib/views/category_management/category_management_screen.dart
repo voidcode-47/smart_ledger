@@ -7,6 +7,7 @@ import '../../utils/app_theme.dart';
 import '../../utils/category_utils.dart';
 import '../../viewmodels/transaction_providers.dart';
 import '../../widgets/glass_card.dart';
+import '../../widgets/gradient_background.dart';
 
 /// 分类管理：增 / 删 / 改名 / 换图标颜色
 /// - 分类存于数据库，流水按分类名称关联
@@ -18,11 +19,12 @@ class CategoryManagementScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    return GradientBackground(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        title: const Text('分类管理'),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: const Text('分类管理'),
         actions: [
           IconButton(
             tooltip: '添加分类',
@@ -63,6 +65,7 @@ class CategoryManagementScreen extends ConsumerWidget {
             ],
           );
         },
+      ),
       ),
     );
   }

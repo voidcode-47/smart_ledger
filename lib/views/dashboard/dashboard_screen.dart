@@ -29,11 +29,13 @@ class DashboardScreen extends ConsumerWidget {
     final canGoNext = month.year < now.year ||
         (month.year == now.year && month.month < now.month);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-      children: [
-        const QuoteCard(),
-        const SizedBox(height: 12),
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 96),
+        children: [
+          const QuoteCard(),
+          const SizedBox(height: 12),
         _monthHeader(ref, month, canGoNext),
         const SizedBox(height: 12),
         GlassCard(
@@ -103,7 +105,8 @@ class DashboardScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -152,8 +152,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     try {
       image = await ImagePicker().pickImage(
         source: source,
-        maxWidth: 1920,
-        imageQuality: 90,
+        maxWidth: 1440,
+        maxHeight: 1440,
+        imageQuality: 82,
       );
     } catch (e) {
       _toast('无法打开${source == ImageSource.camera ? '相机' : '相册'}：$e');
