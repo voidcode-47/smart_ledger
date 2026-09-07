@@ -1,0 +1,55 @@
+name: smart_ledger
+description: "智慧记账 — 跨端个人财务管理助手（Android / Windows）"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # ---------- 状态管理 ----------
+  flutter_riverpod: ^2.5.1
+
+  # ---------- 本地数据库 ----------
+  # Android 使用 sqflite 插件；Windows/Linux 通过 sqflite_common_ffi (SQLite FFI) 支持
+  sqflite: ^2.3.3+1
+  sqflite_common_ffi: ^2.3.3
+  sqlite3_flutter_libs: ^0.5.24   # 为 Windows 桌面端打包原生 sqlite3
+  path: ^1.9.0
+
+  # ---------- 文件操作 ----------
+  path_provider: ^2.1.4
+  file_picker: ^8.1.2
+
+  # ---------- 图表 ----------
+  fl_chart: ^0.69.0
+
+  # ---------- 备份/恢复 ----------
+  archive: ^3.6.1
+
+  # ---------- 桌面端：窗口与系统托盘 ----------
+  window_manager: ^0.5.2
+  tray_manager: ^0.5.3
+
+  # ---------- Android 生物识别 + 开关持久化 ----------
+  local_auth: ^2.3.0
+  shared_preferences: ^2.3.2
+
+  # ---------- 工具 ----------
+  intl: ^0.19.0
+  image_picker: ^1.2.3
+  google_mlkit_text_recognition: ^0.17.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/tray_icon.ico

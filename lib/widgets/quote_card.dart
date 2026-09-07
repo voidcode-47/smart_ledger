@@ -1,0 +1,119 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../services/quote_fetcher.dart';
+import '../utils/app_theme.dart';
+import '../utils/quote_utils.dart';
+import 'glass_card.dart';
+
+/// 仪表盘顶部名言卡：进入时随机显示（联网优先，失败回退本地），
+/// 点击复制，可换一条
+class QuoteCard extends StatefulWidget {
+  const QuoteCard({super.key});
+
+  @override
+  State<QuoteCard> createState() => _QuoteCardState();
+}
+
+class _QuoteCardState extends State<QuoteCard> {
+  late QuoteItem _quote;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _quote = QuoteUtils.random();
+    _tryRemote();
+  }
+
+  /// 联网刷新：优先一言，失败回退本地
+  Future<void> _tryRemote() async {
+    if (_loading) return;
+    setState(() => _loading = true);
+    final remote = await QuoteFetcher.fetchRemote();
+    if (!mounted) return;
+    setState(() {
+      if (remote != null) _quote = remote;
+      _loading = false;
+    });
+  }
+
+  void _refresh() {
+    setState(() => _quote = QuoteUtils.random());
+    _tryRemote();
+  }
+
+  Future<void> _copy() async {
+    final full = '${_quote.text} —— ${_quote.source}';
+    await Clipboard.setData(ClipboardData(text: full));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text('已复制：$full'),
+        duration: const Duration(seconds: 2),
+      ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: _copy,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.format_quote_rounded,
+                  size: 30, color: AppTheme.accent.withValues(alpha: 0.85)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _quote.text,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '—— ${_quote.source}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.black.withValues(alpha: 0.50),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: '换一条（联网获取）',
+                visualDensity: VisualDensity.compact,
+                onPressed: _loading ? null : _refresh,
+                icon: _loading
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.black.withValues(alpha: 0.45)),
+                      )
+                    : Icon(Icons.refresh_rounded,
+                        size: 18,
+                        color: Colors.black.withValues(alpha: 0.55)),
+              ),
+              Icon(Icons.copy_rounded,
+                  size: 15, color: Colors.black.withValues(alpha: 0.35)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
