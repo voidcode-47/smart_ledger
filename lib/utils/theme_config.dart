@@ -25,6 +25,9 @@ class ThemeConfig {
 
   static const String prefKey = 'background_theme_id';
 
+  /// 自定义背景图片（持久化为图片文件路径，存于应用文档目录）
+  static const String customBgKey = 'custom_background_path';
+
   static const List<BackgroundTheme> backgrounds = [
     BackgroundTheme(
       id: 'mint',

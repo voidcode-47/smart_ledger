@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../services/backup_service.dart';
 import '../../services/biometric_service.dart';
@@ -43,6 +44,62 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
         content: Text(msg),
         duration: const Duration(seconds: 3),
       ));
+  }
+
+  // ---------- 外观：自定义背景图片 ----------
+  Future<void> _pickCustomBackground() async {
+    final hasCustom = ref.read(customBackgroundProvider) != null;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('从相册选择图片'),
+                onTap: () => Navigator.pop(ctx, 'pick'),
+              ),
+              if (hasCustom)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline_rounded),
+                  title: const Text('清除自定义背景'),
+                  onTap: () => Navigator.pop(ctx, 'clear'),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (action == null || !mounted) return;
+
+    if (action == 'clear') {
+      await ref.read(customBackgroundProvider.notifier).clear();
+      _toast('已恢复主题背景');
+      return;
+    }
+
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        imageQuality: 85,
+      );
+      if (image == null || !mounted) return;
+      final ok =
+          await ref.read(customBackgroundProvider.notifier).setFrom(image.path);
+      if (!mounted) return;
+      _toast(ok ? '背景已更新' : '背景图片保存失败，请重试');
+    } catch (e) {
+      if (!mounted) return;
+      _toast('无法打开相册：$e');
+    }
   }
 
   // ---------- 外观：背景主题选择 ----------
@@ -334,6 +391,49 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                 icon: Icon(Icons.chevron_right_rounded,
                     color: Colors.black.withValues(alpha: 0.60)),
                 onPressed: _pickBackgroundTheme,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // ---------- 自定义背景 ----------
+        GlassCard(
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppTheme.accentBg,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.image_outlined,
+                    color: AppTheme.accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('自定义背景',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 3),
+                    Text(
+                      ref.watch(customBackgroundProvider) != null
+                          ? '已启用图片背景，点击可更换/清除'
+                          : '用自己喜欢的图片做背景（可清除）',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black.withValues(alpha: 0.60)),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.chevron_right_rounded,
+                    color: Colors.black.withValues(alpha: 0.60)),
+                onPressed: _pickCustomBackground,
               ),
             ],
           ),

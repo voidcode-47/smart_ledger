@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../viewmodels/theme_providers.dart';
 
 /// 全局背景：柔和渐变 + 淡光斑（清爽记账风；支持多套背景主题切换）
+/// 若启用了自定义背景图片，则优先显示图片（叠加轻微白色遮罩保证文字可读）
 class GradientBackground extends ConsumerWidget {
   const GradientBackground({super.key, required this.child});
 
@@ -12,6 +15,10 @@ class GradientBackground extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(backgroundThemeProvider);
+    final customBg = ref.watch(customBackgroundProvider);
+
+    final hasCustom = customBg != null && File(customBg).existsSync();
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -22,18 +29,31 @@ class GradientBackground extends ConsumerWidget {
       ),
       child: Stack(
         children: [
-          // 右上光斑
-          Positioned(
-            top: -100,
-            right: -80,
-            child: _blob(theme.blob1.withValues(alpha: 0.12), 280),
-          ),
-          // 左下光斑
-          Positioned(
-            bottom: -120,
-            left: -100,
-            child: _blob(theme.blob2.withValues(alpha: 0.16), 320),
-          ),
+          if (hasCustom) ...[
+            // 自定义背景图：全屏铺满，上方叠白色遮罩保证可读性
+            Positioned.fill(
+              child: Image.file(
+                File(customBg),
+                fit: BoxFit.cover,
+              ),
+            ),
+            Positioned.fill(
+              child: ColoredBox(color: Colors.white.withValues(alpha: 0.55)),
+            ),
+          ] else ...[
+            // 右上光斑
+            Positioned(
+              top: -100,
+              right: -80,
+              child: _blob(theme.blob1.withValues(alpha: 0.12), 280),
+            ),
+            // 左下光斑
+            Positioned(
+              bottom: -120,
+              left: -100,
+              child: _blob(theme.blob2.withValues(alpha: 0.16), 320),
+            ),
+          ],
           child,
         ],
       ),

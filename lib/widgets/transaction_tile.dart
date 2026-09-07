@@ -68,7 +68,12 @@ class TransactionTile extends ConsumerWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onEdit,
-      onLongPress: onDelete == null ? null : () => _confirmDelete(context),
+      onLongPress: onDelete == null
+          ? null
+          : () async {
+              final ok = await _confirmDelete(context);
+              if (ok) onDelete?.call();
+            },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
@@ -139,7 +144,10 @@ class TransactionTile extends ConsumerWidget {
               // 显式删除图标：手机端最可靠的删除入口
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () => _confirmDelete(context),
+                onTap: () async {
+                  final ok = await _confirmDelete(context);
+                  if (ok) onDelete?.call();
+                },
                 child: Container(
                   width: 32,
                   height: 32,
