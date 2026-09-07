@@ -69,12 +69,30 @@ class ReceiptOcrService {
 
   /// 分类关键词映射：关键词 -> 分类名
   static const Map<String, List<String>> _categoryKeywords = {
-    '餐饮': ['餐', '吃饭', '外卖', '食堂', '奶茶', '咖啡', '面馆', '烧烤', '火锅', '小吃', '快餐'],
-    '购物': ['超市', '购物', '淘宝', '京东', '拼多多', '便利店', '商场', '服装', '鞋', '商城'],
-    '交通': ['地铁', '公交', '滴滴', '打车', '出租', '加油', '停车', '高铁', '火车', '车票', '骑行'],
-    '娱乐': ['电影', '游戏', 'KTV', '网吧', '景点', '门票', '视频', '会员'],
-    '其他': ['缴费', '水电', '物业', '话费', '快递'],
-    '收入': ['工资', '转账', '收款', '红包', '奖金', '退款', '报销', '入账'],
+    '餐饮': [
+      '餐', '吃饭', '外卖', '食堂', '奶茶', '咖啡', '面馆', '烧烤', '火锅', '小吃', '快餐',
+      '餐厅', '饭店', '肯德基', '麦当劳', '汉堡', '面条', '饺子', '米线', '炒菜', '夜宵',
+      '星巴克', '甜品', '蛋糕', '零食', '水果',
+    ],
+    '购物': [
+      '超市', '购物', '淘宝', '京东', '拼多多', '便利店', '商场', '服装', '鞋', '商城',
+      '药店', '文具', '天猫', '唯品会', '沃尔玛', '永辉', '家乐福', '百货',
+    ],
+    '交通': [
+      '地铁', '公交', '滴滴', '打车', '出租', '加油', '停车', '高铁', '火车', '车票',
+      '骑行', '顺风车', '公交卡', '高速', '燃油',
+    ],
+    '娱乐': [
+      '电影', '游戏', 'KTV', '网吧', '景点', '门票', '视频', '会员', '影院', '唱吧',
+    ],
+    '其他': [
+      '缴费', '水电', '物业', '话费', '快递', '房租', '燃气', '宽带', '医院', '药房',
+      '学费', '罚款',
+    ],
+    '收入': [
+      '工资', '转账', '收款', '红包', '奖金', '退款', '报销', '入账', '支付宝到账',
+      '微信到账', '薪水',
+    ],
   };
 
   static ReceiptOcrResult parse(String raw) {
@@ -93,38 +111,56 @@ class ReceiptOcrService {
     );
   }
 
-  /// 金额解析优先级：¥/￥ 前缀 > 合计/实付/总计/金额/付款 关键词 > 独立数字行
+  /// OCR 文本清洗：千分位逗号、小写 o/O 被误识别的 0、全角字符
+  static String _cleanNumber(String s) => s
+      .replaceAll(',', '')
+      .replaceAll('，', '')
+      .replaceAll('o', '0')
+      .replaceAll('O', '0')
+      .replaceAll('｡', '.');
+
+  /// 金额解析：
+  /// 1) ¥/￥ 前缀（微信/支付宝账单样式，最可靠）
+  /// 2) 关键词引导（实付/合计/总计/金额/付款/支付/消费/小计/应收/总价）
+  /// 3) 独立数字行（形如 25.00 或 25，排除日期/年份/电话/长订单号干扰）
+  /// 每级内取最大值（账单总额通常是最大金额）
   static double? _parseAmount(List<String> lines) {
     double? best;
     void consider(double? v) {
       final value = v;
-      if (value == null || value <= 0) return;
-      if (best == null || value > best!) best = value;
+      if (value == null || value <= 0 || value > 9999999) return;
+      final current = best;
+      if (current == null || value > current) best = value;
     }
 
-    // 1) 货币符号前缀：¥25.00 / ￥12.5
-    final reSymbol = RegExp(r'[¥￥]\s*(\d{1,7}(?:\.\d{1,2})?)');
+    // 1) 货币符号前缀：¥25.00 / ￥ 12.5 / ¥1,234.50
+    final reSymbol = RegExp(r'[¥￥]\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|\d{1,7}(?:\.\d{1,2})?)');
     for (final line in lines) {
       for (final m in reSymbol.allMatches(line)) {
-        consider(double.tryParse(m.group(1)!));
+        consider(double.tryParse(_cleanNumber(m.group(1)!)));
       }
     }
     if (best != null) return best;
 
-    // 2) 关键词引导：合计/实付/总计/金额/付款 25.00
-    final reKw = RegExp(r'(?:合计|实付|总计|金额|付款|支付|消费|小计)\D{0,8}(\d{1,7}(?:\.\d{1,2})?)');
+    // 2) 关键词引导：实付（微信/支付宝账单最常出现）> 合计/总计/金额等
+    final reKw =
+        RegExp(r'(?:实付|合计|总计|金额|付款|支付|消费|小计|应收|总价)\D{0,8}(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|\d{1,7}(?:\.\d{1,2})?)(?:元)?');
     for (final line in lines) {
       for (final m in reKw.allMatches(line)) {
-        consider(double.tryParse(m.group(1)!));
+        consider(double.tryParse(_cleanNumber(m.group(1)!)));
       }
     }
     if (best != null) return best;
 
-    // 3) 独立数字行（形如 25.00 或 25）
-    final rePlain = RegExp(r'^(\d{1,7}(?:\.\d{1,2})?)$');
+    // 3) 独立数字行：2~7 位数字（可带 1~2 位小数），排除 4 位纯整数（年份）、
+    //    8 位以上（订单号/流水号/手机号）、以及形如 12.30 的时间误判（结合上下文难以
+    //    完全排除，故仅接受 <= 9999999 的合理值）
+    final rePlain = RegExp(r'^(\d{2,7}(?:\.\d{1,2})?)$');
     for (final line in lines) {
+      // 排除纯 4 位整数（极可能是年份如 2026）
+      if (RegExp(r'^\d{4}$').hasMatch(line)) continue;
       final m = rePlain.firstMatch(line);
-      if (m != null) consider(double.tryParse(m.group(1)!));
+      if (m != null) consider(double.tryParse(_cleanNumber(m.group(1)!)));
     }
     return best;
   }
