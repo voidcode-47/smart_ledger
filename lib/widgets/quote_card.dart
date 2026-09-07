@@ -34,8 +34,9 @@ class _QuoteCardState extends State<QuoteCard> {
     }
   }
 
-  /// 联网获取：成功则更新缓存与当前显示；失败/无网回退本地随机
-  Future<void> _tryRemote() async {
+  /// 联网获取：成功则更新缓存与当前显示；失败时根据 [swapOnFail] 决定是否换本地。
+  /// 刷新期间保持当前格言不变（只转圈），完成后一次性更新，避免"闪两条"。
+  Future<void> _tryRemote({bool swapOnFail = false}) async {
     if (_loading) return;
     setState(() => _loading = true);
     final remote = await QuoteFetcher.fetchRemote();
@@ -44,15 +45,15 @@ class _QuoteCardState extends State<QuoteCard> {
       if (remote != null) {
         _quote = remote;
         _remoteCache = remote;
+      } else if (swapOnFail) {
+        // 手动刷新且联网失败：换一条本地格言
+        _quote = QuoteUtils.random();
       }
       _loading = false;
     });
   }
 
-  void _refresh() {
-    setState(() => _quote = QuoteUtils.random());
-    _tryRemote();
-  }
+  void _refresh() => _tryRemote(swapOnFail: true);
 
   Future<void> _copy() async {
     final full = '${_quote.text} —— ${_quote.source}';
