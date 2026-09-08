@@ -12,6 +12,7 @@ import '../../utils/app_theme.dart';
 import '../../utils/theme_config.dart';
 import '../../viewmodels/theme_providers.dart';
 import '../../viewmodels/transaction_providers.dart';
+import '../recurring/recurring_screen.dart';
 import '../../widgets/glass_card.dart';
 import '../background/background_manager_screen.dart';
 import '../category_management/category_management_screen.dart';
@@ -428,6 +429,50 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
               ],
             ),
           ),
+        const SizedBox(height: 16),
+
+        // ---------- 周期记账 ----------
+        GlassCard(
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppTheme.accentBg,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.event_repeat_rounded,
+                    color: AppTheme.accent),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('周期记账',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                    SizedBox(height: 3),
+                    Text(
+                      '房租 / 生活费 / 工资每月自动入账',
+                      style: TextStyle(
+                          fontSize: 12, color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.chevron_right_rounded,
+                    color: Colors.black.withValues(alpha: 0.60)),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const RecurringScreen(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 16),
 
         // ---------- 自定义背景 ----------

@@ -7,6 +7,7 @@ import '../../utils/category_utils.dart';
 import '../../viewmodels/transaction_providers.dart';
 import '../../widgets/category_ranking_card.dart';
 import '../../widgets/glass_card.dart';
+import '../../widgets/monthly_summary_card.dart';
 import '../../widgets/staggered_item.dart';
 import '../../widgets/trend_line_chart.dart';
 import '../../widgets/transaction_tile.dart';
@@ -28,6 +29,8 @@ class StatisticsScreen extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),
       children: [
         const Text('统计报表', style: AppTextStyles.pageTitle),
+        const SizedBox(height: 16),
+        const MonthlySummaryCard(),
         const SizedBox(height: 16),
         GlassCard(
           child: Column(

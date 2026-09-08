@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -46,6 +47,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   String? _category; // 分类名称
   late DateTime _date;
   late final TextEditingController _noteCtrl;
+
+  // AA 拼单（仅新增支出时显示）
+  bool _aaEnabled = false;
+  int _aaPeople = 2;
 
   @override
   void initState() {
@@ -225,12 +230,26 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       return;
     }
 
+    // AA 拼单信息：备注为空时自动记录分摊，便于流水追溯
+    final share = (!_isEdit && _aaEnabled && _type == TransactionType.expense)
+        ? amount / _aaPeople
+        : null;
+    final shareText = share == null
+        ? ''
+        : (share == share.roundToDouble()
+            ? share.toInt().toString()
+            : share.toStringAsFixed(2));
+    final baseNote = _noteCtrl.text.trim();
+    final note = (share != null && baseNote.isEmpty)
+        ? 'AA拼单 · 共$_aaPeople人 · 每人¥$shareText'
+        : baseNote;
+
     final entry = TransactionEntry(
       amount: amount,
       type: _type,
       category: category,
       date: _date,
-      note: _noteCtrl.text.trim(),
+      note: note,
     );
 
     final notifier = ref.read(transactionListProvider.notifier);
@@ -241,7 +260,16 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     }
     if (!mounted) return;
     Navigator.of(context).pop();
-    _toast(_isEdit ? '已更新' : '已保存');
+
+    // AA 拼单：复制分享文案并提示每人金额
+    if (share != null) {
+      await Clipboard.setData(ClipboardData(
+        text: '【智慧记账】「$category」${_formatAmount(amount)} 元，AA 拼单共 $_aaPeople 人，每人 $shareText 元',
+      ));
+      _toast('已记入，每人 ¥$shareText（已复制）');
+    } else {
+      _toast(_isEdit ? '已更新' : '已保存');
+    }
   }
 
   void _toast(String msg) {
@@ -279,6 +307,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                       _dateRow(),
                       const SizedBox(height: 12),
                       _noteField(),
+                      _aaField(),
                       const SizedBox(height: 12),
                       _categoryGrid(),
                     ],
@@ -336,8 +365,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       child: GestureDetector(
         onTap: () => setState(() {
           _type = type;
-          // 切换类型时重置未保存的分类选择
+          // 切换类型时重置未保存的分类选择与 AA 设置
           _category = null;
+          _aaEnabled = false;
         }),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -429,6 +459,64 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       decoration: const InputDecoration(
         hintText: '备注（可选）',
         prefixIcon: Icon(Icons.edit_note_rounded),
+      ),
+    );
+  }
+
+  /// AA 拼单：聚餐 / 宿舍拼单等场景，保存后自动计算每人金额并复制分享文案
+  Widget _aaField() {
+    if (_isEdit || _type == TransactionType.income) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.group_rounded,
+              size: 18, color: AppTheme.textSecondary),
+          const SizedBox(width: 8),
+          const Text('AA 拼单',
+              style: TextStyle(fontWeight: FontWeight.w600)),
+          const Spacer(),
+          if (_aaEnabled)
+            Row(
+              children: [
+                _peopleButton(Icons.remove_circle_outline_rounded, () {
+                  if (_aaPeople > 2) setState(() => _aaPeople--);
+                }),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Text('$_aaPeople 人',
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                ),
+                _peopleButton(Icons.add_circle_outline_rounded, () {
+                  if (_aaPeople < 20) setState(() => _aaPeople++);
+                }),
+                const SizedBox(width: 6),
+              ],
+            ),
+          Switch(
+            value: _aaEnabled,
+            activeThumbColor: AppTheme.accent,
+            onChanged: (v) => setState(() => _aaEnabled = v),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _peopleButton(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: Icon(icon, size: 22, color: AppTheme.textSecondary),
       ),
     );
   }

@@ -22,6 +22,9 @@ class FormatUtils {
   /// -> 2026-09-06
   static String fullDate(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
+  /// -> 9月6日
+  static String monthDay(DateTime d) => DateFormat('M月d日').format(d);
+
   /// 紧凑金额：>=10000 显示 x.x万；否则保留两位小数
   static String compactMoney(double amount) {
     final abs = amount.abs();
