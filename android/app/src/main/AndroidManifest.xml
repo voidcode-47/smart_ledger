@@ -4,9 +4,6 @@
     <!-- 图片识别记账：拍照入口（部分国产 ROM 需要显式声明相机权限） -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <!-- 截屏记账：监听媒体库读取新截图（Android 13+ 用 READ_MEDIA_IMAGES，更低版本用 READ_EXTERNAL_STORAGE） -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <application
         android:label="智慧记账"
         android:name="${applicationName}"

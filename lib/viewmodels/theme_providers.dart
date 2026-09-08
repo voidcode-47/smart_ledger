@@ -52,11 +52,12 @@ class CustomBackgroundsState {
   final String? activeId;
 
   CustomBackgroundItem? get active {
-    if (items.isEmpty) return null;
+    // activeId 为 null 表示用户已显式停用（例如选择了主题），不得回退到第一张
+    if (items.isEmpty || activeId == null) return null;
     for (final it in items) {
       if (it.id == activeId) return it;
     }
-    return items.first;
+    return null;
   }
 }
 

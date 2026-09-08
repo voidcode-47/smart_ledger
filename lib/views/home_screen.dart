@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -11,11 +9,9 @@ import '../models/transaction_model.dart';
 import '../services/receipt_ocr_service.dart';
 import '../services/recurring_service.dart';
 import '../viewmodels/transaction_providers.dart';
-import '../services/screenshot_watcher.dart';
 import '../utils/app_theme.dart';
 import '../utils/responsive.dart';
 import '../widgets/gradient_background.dart';
-import '../widgets/screenshot_confirm_sheet.dart';
 import 'add_transaction/add_transaction_sheet.dart';
 import 'add_transaction/quick_add_dialog.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -55,35 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       trayManager.addListener(this);
       _setupDesktopIntegration();
     }
-    if (Platform.isAndroid) {
-      _initScreenshotWatch();
-    }
     _processRecurring();
-  }
-
-  /// 截屏记账：注册截图回调；若用户在设置中开启则自动启动监听
-  Future<void> _initScreenshotWatch() async {
-    ScreenshotWatcher.onScreenshot = _handleScreenshot;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final enabled =
-          prefs.getBool('screenshot_ledger_enabled') ?? false;
-      if (enabled) {
-        // 启动时不弹权限框：权限未授予则由数据页开关引导
-        await ScreenshotWatcher.start(requestPermission: false);
-      }
-    } catch (_) {}
-  }
-
-  /// 截图回调：OCR 识别，识别到金额才弹确认面板（非账单静默忽略）
-  Future<void> _handleScreenshot(String path) async {
-    try {
-      final result = await ReceiptOcrService.recognize(XFile(path));
-      if (!mounted || result.amount == null) return;
-      await showScreenshotConfirmSheet(context, result);
-    } catch (_) {
-      // 识别失败不打扰
-    }
   }
 
   /// 周期记账：启动时检查到期规则并自动入账（一次性，不打扰）

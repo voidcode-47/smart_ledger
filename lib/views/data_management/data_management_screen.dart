@@ -2,12 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/backup_service.dart';
 import '../../services/biometric_service.dart';
 import '../../services/csv_service.dart';
-import '../../services/screenshot_watcher.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/theme_config.dart';
 import '../../viewmodels/theme_providers.dart';
@@ -29,10 +27,6 @@ class DataManagementScreen extends ConsumerStatefulWidget {
 class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
   bool _busy = false;
   bool _biometricEnabled = false;
-  bool _screenshotEnabled = false;
-
-  /// 截屏监听是否真正生效（权限授予 + 原生注册成功）
-  bool _screenshotWatchActive = false;
 
   @override
   void initState() {
@@ -40,16 +34,6 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     if (Platform.isAndroid) {
       BiometricService.instance.isEnabled().then((v) {
         if (mounted) setState(() => _biometricEnabled = v);
-      });
-      SharedPreferences.getInstance().then((prefs) async {
-        final v = prefs.getBool('screenshot_ledger_enabled') ?? false;
-        final active = v ? await ScreenshotWatcher.isWatching() : false;
-        if (mounted) {
-          setState(() {
-            _screenshotEnabled = v;
-            _screenshotWatchActive = active;
-          });
-        }
       });
     }
   }
@@ -61,88 +45,6 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
         content: Text(msg),
         duration: const Duration(seconds: 3),
       ));
-  }
-
-  // ---------- 截屏记账开关 ----------
-  Future<void> _toggleScreenshotLedger(bool v) async {
-    if (!Platform.isAndroid) {
-      _toast('截屏记账仅支持 Android');
-      return;
-    }
-    setState(() => _screenshotEnabled = v);
-
-    if (v) {
-      final status = await ScreenshotWatcher.start();
-      if (status == 'error') {
-        if (mounted) setState(() => _screenshotEnabled = false);
-        _toast('启动截屏监听失败');
-        return;
-      }
-      // 缺权限时原生已发起系统权限请求；等待用户操作并轮询实际生效状态
-      var watching = false;
-      for (var i = 0; i < 10; i++) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        watching = await ScreenshotWatcher.isWatching();
-        if (watching) break;
-      }
-      if (!mounted) return;
-      setState(() {
-        _screenshotEnabled = true;
-        _screenshotWatchActive = watching;
-      });
-      if (watching) {
-        _toast('截屏记账已开启：截图账单后会自动识别');
-      } else {
-        _showPermissionGuide();
-      }
-    } else {
-      await ScreenshotWatcher.stop();
-      if (mounted) {
-        setState(() {
-          _screenshotEnabled = false;
-          _screenshotWatchActive = false;
-        });
-      }
-      _toast('截屏记账已关闭');
-    }
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('screenshot_ledger_enabled', v);
-    } catch (_) {}
-  }
-
-  /// 权限未生效引导：解释 + 一键跳系统设置
-  Future<void> _showPermissionGuide() async {
-    if (!mounted) return;
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('需要「照片和视频」权限'),
-        content: const Text(
-          '截屏记账需要读取系统截图才能识别账单。\n\n'
-          '若刚才没有出现权限弹窗（可能已被拒绝），请到系统设置中手动开启「照片和视频」权限，然后回到这里重新打开开关。',
-          style: TextStyle(fontSize: 13, height: 1.6),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('稍后'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.accent,
-                foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('去系统设置'),
-          ),
-        ],
-      ),
-    );
-    if (go == true) {
-      await ScreenshotWatcher.openAppSettings();
-    }
   }
 
   // ---------- 外观：自定义背景管理（多张 / 透明度 / 框选） ----------
@@ -415,94 +317,106 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
         ),
         const SizedBox(height: 16),
 
-        // ---------- 外观设置 ----------
+        // ---------- 外观设置（背景主题 + 自定义背景） ----------
         GlassCard(
-          child: Row(
+          child: Column(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppTheme.accentBg,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child:
-                    const Icon(Icons.palette_outlined, color: AppTheme.accent),
+              const Padding(
+                padding: EdgeInsets.only(left: 2, top: 2),
+                child: Text('外观设置', style: AppTextStyles.sectionTitle),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('外观设置',
-                        style: TextStyle(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 3),
-                    Text(
-                      '切换页面背景主题：${ref.watch(backgroundThemeProvider).name}',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black.withValues(alpha: 0.60)),
+              const SizedBox(height: 4),
+              // 背景主题行
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentBg,
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                  ],
-                ),
+                    child: const Icon(Icons.palette_outlined,
+                        color: AppTheme.accent),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('背景主题',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 3),
+                        Text(
+                          '当前：${ref.watch(backgroundThemeProvider).name}',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black.withValues(alpha: 0.60)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.chevron_right_rounded,
+                        color: Colors.black.withValues(alpha: 0.60)),
+                    onPressed: _pickBackgroundTheme,
+                  ),
+                ],
               ),
-              IconButton(
-                icon: Icon(Icons.chevron_right_rounded,
-                    color: Colors.black.withValues(alpha: 0.60)),
-                onPressed: _pickBackgroundTheme,
+              Divider(
+                  height: 1,
+                  color: Colors.black.withValues(alpha: 0.06)),
+              const SizedBox(height: 8),
+              // 自定义背景行
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentBg,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.image_outlined,
+                        color: AppTheme.accent),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Builder(builder: (ctx) {
+                      final bgState = ref.watch(customBackgroundsProvider);
+                      final cnt = bgState.items.length;
+                      final enabled = bgState.active != null;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('自定义背景',
+                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 3),
+                          Text(
+                            cnt == 0
+                                ? '添加图片背景 · 透明度调节 · 框选区域'
+                                : enabled
+                                    ? '已启用 $cnt 张背景中的 1 张，点击管理'
+                                    : '已添加 $cnt 张（未启用），点击管理',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black.withValues(alpha: 0.60)),
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.chevron_right_rounded,
+                        color: Colors.black.withValues(alpha: 0.60)),
+                    onPressed: _openBackgroundManager,
+                  ),
+                ],
               ),
+              const SizedBox(height: 2),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-
-        // ---------- 截屏记账 ----------
-        if (Platform.isAndroid)
-          GlassCard(
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentBg,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.screenshot_monitor_rounded,
-                      color: AppTheme.accent),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('截屏记账',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 3),
-                      Text(
-                        _screenshotEnabled
-                            ? (_screenshotWatchActive
-                                ? '已开启：截图账单后自动识别（请保持应用在后台运行）'
-                                : '已开启但未生效：请在系统设置中允许「照片和视频」权限')
-                            : '截屏账单后自动识别并弹窗确认；需授予照片权限且在后台运行',
-                        style: TextStyle(
-                            fontSize: 12,
-                            height: 1.4,
-                            color: _screenshotEnabled && !_screenshotWatchActive
-                                ? AppTheme.expenseColor
-                                : Colors.black.withValues(alpha: 0.60)),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: _screenshotEnabled,
-                  activeThumbColor: AppTheme.accent,
-                  onChanged: _toggleScreenshotLedger,
-                ),
-              ],
-            ),
-          ),
         const SizedBox(height: 16),
 
         // ---------- 周期记账 ----------
@@ -543,52 +457,6 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                     builder: (_) => const RecurringScreen(),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // ---------- 自定义背景 ----------
-        GlassCard(
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppTheme.accentBg,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.image_outlined,
-                    color: AppTheme.accent),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('自定义背景',
-                        style: TextStyle(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 3),
-                    Builder(builder: (ctx) {
-                      final cnt = ref.watch(customBackgroundsProvider).items.length;
-                      return Text(
-                        cnt == 0
-                            ? '多张背景 · 透明度调节 · 框选区域'
-                            : '已添加 $cnt 张背景，点击管理',
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.black.withValues(alpha: 0.60)),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.chevron_right_rounded,
-                    color: Colors.black.withValues(alpha: 0.60)),
-                onPressed: _openBackgroundManager,
               ),
             ],
           ),
