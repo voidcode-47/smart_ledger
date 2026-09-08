@@ -13,8 +13,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
 
-    // 底部导航与仪表盘核心区块
+    // 底部导航与仪表盘核心区块（首屏可见元素；
+    // “最近流水”位于列表下方视口外，懒加载下不参与断言）
     expect(find.text('仪表盘'), findsOneWidget);
-    expect(find.text('最近流水'), findsOneWidget);
+    expect(find.text('收入'), findsOneWidget);
+    expect(find.text('支出'), findsOneWidget);
+    expect(find.text('结余'), findsOneWidget);
   });
 }

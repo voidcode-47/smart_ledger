@@ -25,8 +25,12 @@ class ThemeConfig {
 
   static const String prefKey = 'background_theme_id';
 
-  /// 自定义背景图片（持久化为图片文件路径，存于应用文档目录）
+  /// 自定义背景图片（旧版单图路径 key，已迁移到 items key）
   static const String customBgKey = 'custom_background_path';
+
+  /// 自定义背景集合（JSON：id/path/opacity）与当前激活项
+  static const String customBgItemsKey = 'custom_background_items';
+  static const String customBgActiveKey = 'custom_background_active';
 
   static const List<BackgroundTheme> backgrounds = [
     BackgroundTheme(

@@ -6,7 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodels/theme_providers.dart';
 
 /// 全局背景：柔和渐变 + 淡光斑（清爽记账风；支持多套背景主题切换）
-/// 若启用了自定义背景图片，则优先显示图片（叠加轻微白色遮罩保证文字可读）
+/// 若启用了自定义背景图片，则优先显示图片：
+/// - 图片不透明度由 CustomBackgroundItem.opacity 控制
+/// - 叠加与透明度反向的白色遮罩，保证文字始终可读
 class GradientBackground extends ConsumerWidget {
   const GradientBackground({super.key, required this.child});
 
@@ -15,9 +17,11 @@ class GradientBackground extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(backgroundThemeProvider);
-    final customBg = ref.watch(customBackgroundProvider);
+    final custom = ref.watch(customBackgroundsProvider).active;
 
-    final hasCustom = customBg != null && File(customBg).existsSync();
+    final hasCustom = custom != null && File(custom.path).existsSync();
+    // 图片越不透明，遮罩越淡（保证可读性的同时保留图片观感）
+    final maskAlpha = 0.55 * (1.0 - (custom?.opacity ?? 1.0));
 
     return Container(
       decoration: BoxDecoration(
@@ -30,15 +34,21 @@ class GradientBackground extends ConsumerWidget {
       child: Stack(
         children: [
           if (hasCustom) ...[
-            // 自定义背景图：全屏铺满，上方叠白色遮罩保证可读性
+            // 自定义背景图：全屏铺满，透明度可调
             Positioned.fill(
-              child: Image.file(
-                File(customBg),
-                fit: BoxFit.cover,
+              child: Opacity(
+                opacity: custom.opacity,
+                child: Image.file(
+                  File(custom.path),
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.medium,
+                ),
               ),
             ),
+            // 可读性遮罩（透明度反向）
             Positioned.fill(
-              child: ColoredBox(color: Colors.white.withValues(alpha: 0.55)),
+              child: ColoredBox(
+                  color: Colors.white.withValues(alpha: maskAlpha)),
             ),
           ] else ...[
             // 右上光斑

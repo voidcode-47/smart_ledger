@@ -2,12 +2,18 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../models/transaction_model.dart';
+import '../services/receipt_ocr_service.dart';
+import '../services/screenshot_watcher.dart';
 import '../utils/app_theme.dart';
 import '../utils/responsive.dart';
 import '../widgets/gradient_background.dart';
+import '../widgets/screenshot_confirm_sheet.dart';
 import 'add_transaction/add_transaction_sheet.dart';
 import 'add_transaction/quick_add_dialog.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -46,6 +52,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       windowManager.addListener(this);
       trayManager.addListener(this);
       _setupDesktopIntegration();
+    }
+    if (Platform.isAndroid) {
+      _initScreenshotWatch();
+    }
+  }
+
+  /// 截屏记账：注册截图回调；若用户在设置中开启则自动启动监听
+  Future<void> _initScreenshotWatch() async {
+    ScreenshotWatcher.onScreenshot = _handleScreenshot;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final enabled =
+          prefs.getBool('screenshot_ledger_enabled') ?? false;
+      if (enabled) {
+        await ScreenshotWatcher.start();
+      }
+    } catch (_) {}
+  }
+
+  /// 截图回调：OCR 识别，识别到金额才弹确认面板（非账单静默忽略）
+  Future<void> _handleScreenshot(String path) async {
+    try {
+      final result = await ReceiptOcrService.recognize(XFile(path));
+      if (!mounted || result.amount == null) return;
+      await showScreenshotConfirmSheet(context, result);
+    } catch (_) {
+      // 识别失败不打扰
     }
   }
 
@@ -124,6 +157,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   void _openAddSheet() => AddTransactionSheet.show(context);
 
+  /// 一句话记账：输入如“午饭 32”“打车 25.5”“工资 8000”，
+  /// 复用 OCR 解析引擎识别金额/分类后进入确认表单
+  Future<void> _openTextAdd() async {
+    final ctrl = TextEditingController();
+    final text = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('一句话记账'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          maxLines: 2,
+          decoration: const InputDecoration(
+            hintText: '例如：午饭 32 / 打车 25.5 / 工资 8000',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (_) => Navigator.pop(ctx, ctrl.text.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.accent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: const Text('识别'),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (text == null || text.isEmpty || !mounted) return;
+
+    final r = ReceiptOcrService.parse(text);
+    if (r.amount == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+          content: Text('未识别到金额，请检查输入（如：午饭 32）'),
+          duration: Duration(seconds: 2),
+        ));
+      return;
+    }
+    final isIncome = r.category == '收入';
+    final entry = TransactionEntry(
+      amount: r.amount!,
+      type: isIncome
+          ? TransactionType.income
+          : TransactionType.expense,
+      category: r.category ?? (isIncome ? '收入' : '其他'),
+      date: r.date ?? DateTime.now(),
+      note: r.note,
+    );
+    await AddTransactionSheet.show(context, initial: entry);
+  }
+
   @override
   Widget build(BuildContext context) {
     final desktop = Responsive.isDesktop(context);
@@ -133,20 +227,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         backgroundColor: Colors.transparent,
         body: desktop ? _buildDesktopBody() : _buildMobileBody(),
         floatingActionButton: desktop
-            ? FloatingActionButton.extended(
-                heroTag: 'fab_desktop',
-                backgroundColor: AppTheme.accent,
-                foregroundColor: Colors.white,
-                onPressed: _openAddSheet,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('记一笔'),
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _textAddFab('fab_text_desktop'),
+                  const SizedBox(height: 12),
+                  FloatingActionButton.extended(
+                    heroTag: 'fab_desktop',
+                    backgroundColor: AppTheme.accent,
+                    foregroundColor: Colors.white,
+                    onPressed: _openAddSheet,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('记一笔'),
+                  ),
+                ],
               )
-            : FloatingActionButton(
-                heroTag: 'fab_mobile',
-                backgroundColor: AppTheme.accent,
-                foregroundColor: Colors.white,
-                onPressed: _openAddSheet,
-                child: const Icon(Icons.add_rounded),
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _textAddFab('fab_text_mobile'),
+                  const SizedBox(height: 10),
+                  FloatingActionButton(
+                    heroTag: 'fab_mobile',
+                    backgroundColor: AppTheme.accent,
+                    foregroundColor: Colors.white,
+                    onPressed: _openAddSheet,
+                    child: const Icon(Icons.add_rounded),
+                  ),
+                ],
               ),
         floatingActionButtonLocation: desktop
             ? FloatingActionButtonLocation.endFloat
@@ -154,6 +263,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         bottomNavigationBar:
             desktop ? null : _buildMobileBottomBar(),
       ),
+    );
+  }
+
+  /// 一句话记账小按钮（主 FAB 上方）
+  Widget _textAddFab(String heroTag) {
+    return FloatingActionButton.small(
+      heroTag: heroTag,
+      backgroundColor: Colors.white,
+      foregroundColor: AppTheme.accent,
+      tooltip: '一句话记账（如：午饭 32）',
+      onPressed: _openTextAdd,
+      child: const Icon(Icons.edit_note_rounded, size: 22),
     );
   }
 
