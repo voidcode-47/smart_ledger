@@ -120,7 +120,62 @@ class ReceiptOcrService {
       .replaceAll('O', '0')
       .replaceAll('｡', '.');
 
-  /// 金额解析：
+  // ---------------- 一句话记账解析（纯函数，便于测试） ----------------
+
+  /// 一句话记账：从一行自然语言里提取金额、分类与备注。
+  /// 支持：午饭 32 / 打车 25.5 / 工资 8000 / 奶茶 15 元 / 32 / 红包 200
+  ///
+  /// 与图片 OCR 解析不同：金额直接在行内查找（不要求整行为纯数字），
+  /// 日期固定为今天（不解析，避免“打车 2.5”被误判为日期），
+  /// 剩余文字作为备注。
+  static ReceiptOcrResult parseQuickText(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) {
+      return const ReceiptOcrResult(
+          amount: null, category: null, date: null, note: '');
+    }
+    return ReceiptOcrResult(
+      amount: _parseQuickAmount(text),
+      category: _parseCategory(text),
+      date: null,
+      note: _stripQuickAmounts(text),
+    );
+  }
+
+  /// 金额 token：千分位优先（1,234.50），否则任意长度数字（可带 1~2 位小数）。
+  /// 位数合法性（4 位年份 / 5 位以上单号）在 [_parseQuickAmount] 内判断。
+  static final RegExp _quickNumberRe = RegExp(
+      r'\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?');
+
+  /// 行内金额提取：取最后一个合法金额（符合“金额在句末”的语言习惯）。
+  /// 排除：纯 4 位整数（可能是年份，除非文本含收入提示词）、
+  ///       5 位以上纯整数（订单号/流水号/手机号）。
+  static double? _parseQuickAmount(String text) {
+    final isIncomeHint = RegExp(
+            r'工资|红包|奖金|报销|收款|转账|退款|收入|入账|薪水|到账')
+        .hasMatch(text);
+    double? last;
+    for (final m in _quickNumberRe.allMatches(text)) {
+      final raw = m.group(0)!;
+      // 纯 4 位整数：默认排除（年份），收入提示下接受（工资 8000）
+      if (RegExp(r'^\d{4}$').hasMatch(raw) && !isIncomeHint) continue;
+      // 5 位以上纯整数：订单号/流水号，排除
+      if (RegExp(r'^\d{5,}$').hasMatch(raw)) continue;
+      final v = double.tryParse(_cleanNumber(raw));
+      if (v == null || v <= 0 || v > 9999999) continue;
+      last = v;
+    }
+    return last;
+  }
+
+  /// 去掉文本中的金额 token 与“元/块”单位残留，剩余内容作为备注
+  static String _stripQuickAmounts(String text) {
+    var cleaned = text.replaceAll(_quickNumberRe, ' ');
+    cleaned = cleaned.replaceAll(RegExp(r'\s*[元块]\s*'), ' ');
+    return cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
+  /// OCR 金额解析：
   /// 1) ¥/￥ 前缀（微信/支付宝账单样式，最可靠）
   /// 2) 关键词引导（实付/合计/总计/金额/付款/支付/消费/小计/应收/总价）
   /// 3) 独立数字行（形如 25.00 或 25，排除日期/年份/电话/长订单号干扰）

@@ -190,7 +190,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ctrl.dispose();
     if (text == null || text.isEmpty || !mounted) return;
 
-    final r = ReceiptOcrService.parse(text);
+    final r = ReceiptOcrService.parseQuickText(text);
     if (r.amount == null) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
