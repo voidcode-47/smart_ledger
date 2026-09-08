@@ -1,7 +1,6 @@
 // 应用冒烟测试：验证 App 能正常构建并渲染仪表盘页面
 // 注意：测试环境下数据库插件不可用（进入错误态）且存在不确定动画，
 // 因此使用固定步进 pump 而非 pumpAndSettle。
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
