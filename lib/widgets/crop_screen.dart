@@ -52,9 +52,12 @@ class _CropScreenState extends State<CropScreen> {
     }
   }
 
-  /// 计算图片 contain 显示区域（在可用区域内）
+  /// 计算图片 contain 显示区域（在可用区域内）。
+  /// 注意：图片解码完成前 _imageSize 为 null，此时返回整个区域
+  /// （build 层会优先展示加载态，不会走到裁剪绘制）。
   Rect _viewport(Size area) {
-    final img = _imageSize!;
+    final img = _imageSize;
+    if (img == null) return Rect.fromLTWH(0, 0, area.width, area.height);
     final scale =
         (area.width / img.width) < (area.height / img.height)
             ? area.width / img.width
@@ -246,7 +249,10 @@ class _CropScreenState extends State<CropScreen> {
           ? Center(
               child: Text(_error!,
                   style: const TextStyle(color: Colors.white70)))
-          : LayoutBuilder(
+          : _imageSize == null
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white))
+              : LayoutBuilder(
               builder: (context, constraints) {
                 final area = Size(
                     constraints.maxWidth, constraints.maxHeight);
