@@ -1,8 +1,11 @@
 package com.example.smart_ledger
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -20,6 +23,7 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "startWatch" -> {
+                        val requestIfNeeded = call.argument<Boolean>("request") ?: true
                         val status = ScreenshotWatcher.start(this) { path ->
                             runOnUiThread {
                                 MethodChannel(
@@ -28,7 +32,7 @@ class MainActivity : FlutterFragmentActivity() {
                                 ).invokeMethod("onScreenshot", path)
                             }
                         }
-                        if (status == "no_permission") {
+                        if (status == "no_permission" && requestIfNeeded) {
                             requestMediaPermission()
                         }
                         result.success(status)
@@ -38,6 +42,19 @@ class MainActivity : FlutterFragmentActivity() {
                         result.success(true)
                     }
                     "isWatching" -> result.success(ScreenshotWatcher.isActive())
+                    "openAppSettings" -> {
+                        try {
+                            startActivity(
+                                Intent(
+                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.parse("package:$packageName")
+                                )
+                            )
+                        } catch (_: Exception) {
+                            // 个别 ROM 不支持跳转时忽略
+                        }
+                        result.success(true)
+                    }
                     else -> result.notImplemented()
                 }
             }

@@ -19,15 +19,24 @@ import java.io.FileOutputStream
  *
  * 说明：
  * - 需要存储读取权限（Android 13+ READ_MEDIA_IMAGES，更低版本 READ_EXTERNAL_STORAGE）
- * - 仅在应用进程存活时有效（后台常驻受系统限制，属平台行为）
+ * - 仅在应用进程存活时有效（后台常驻受系统限制，属平台行为，建议加入后台白名单）
+ * - 检测窗口 30 秒（部分机型媒体入库有延迟）；目录不匹配时兜底处理最新新增图片，
+ *   由 OCR 判定是否为账单（识别不到金额会静默忽略，不会误记）
  */
 object ScreenshotWatcher {
-    private const val SCREENSHOT_WINDOW_MS = 8000L
+    /** 检测窗口：过短会漏掉入库慢的机型 */
+    private const val SCREENSHOT_WINDOW_MS = 30000L
+
+    /** 兜底处理：即便目录不匹配，也会尝试最新一张新增图片（OCR 兜底判定） */
+    private const val FALLBACK_LATEST = true
 
     private var observer: ContentObserver? = null
     private var contextRef: Context? = null
     private var callback: ((String) -> Unit)? = null
     private var watching = false
+
+    /** 已处理的最新图片 id，防止同一次截图被重复识别 */
+    private var lastProcessedId = -1L
 
     fun isActive(): Boolean = watching
 
@@ -35,6 +44,7 @@ object ScreenshotWatcher {
     fun start(context: Context, cb: (String) -> Unit): String {
         contextRef = context.applicationContext
         callback = cb
+        lastProcessedId = -1L
         if (!hasPermission(context)) return "no_permission"
         register(context)
         return "started"
@@ -73,7 +83,6 @@ object ScreenshotWatcher {
         val cb = callback ?: return
         val resolver = ctx.contentResolver
 
-        // 只看最近 8 秒新增的图片（截屏触发 onChange 的窗口）
         val cutoffSec = (System.currentTimeMillis() - SCREENSHOT_WINDOW_MS) / 1000
         val selection = "${MediaStore.Images.Media.DATE_ADDED} >= ?"
         val args = arrayOf(cutoffSec.toString())
@@ -82,30 +91,50 @@ object ScreenshotWatcher {
             MediaStore.Images.Media.RELATIVE_PATH,
         )
 
-        resolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            args,
-            "${MediaStore.Images.Media.DATE_ADDED} DESC"
-        )?.use { c ->
-            if (c.moveToFirst()) {
-                // RELATIVE_PATH 仅 Android 10+ 存在；低版本无该列时不过滤目录
+        try {
+            resolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                args,
+                "${MediaStore.Images.Media.DATE_ADDED} DESC"
+            )?.use { c ->
+                if (!c.moveToFirst()) return
+                // RELATIVE_PATH 仅 Android 10+ 存在；低版本无该列时直接候选
                 val relIdx = c.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH)
-                var isScreenshot = relIdx < 0
-                if (relIdx >= 0) {
-                    val rel = c.getString(relIdx) ?: ""
-                    isScreenshot = rel.contains("Screenshot", ignoreCase = true) ||
+                var candidateId = -1L
+                if (relIdx < 0) {
+                    candidateId = c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                } else {
+                    var idx = 0
+                    var matched = false
+                    do {
+                        val rel = c.getString(relIdx) ?: ""
+                        val isScreenshot = rel.contains("Screenshot", ignoreCase = true) ||
                             rel.contains("截屏") ||
-                            rel.contains("Pictures", ignoreCase = true)
+                            rel.contains("截图")
+                        val id = c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                        if (isScreenshot) {
+                            candidateId = id
+                            matched = true
+                            break
+                        }
+                        idx++
+                    } while (c.moveToNext() && idx < 3)
+                    // 兜底：窗口内没有匹配目录的图片时，也尝试最新一张
+                    if (!matched && FALLBACK_LATEST) {
+                        candidateId = c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                    }
                 }
-                if (isScreenshot) {
-                    val id = c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
-                    copyToCache(ctx, resolver, id)?.let { path ->
+                if (candidateId > 0 && candidateId != lastProcessedId) {
+                    lastProcessedId = candidateId
+                    copyToCache(ctx, resolver, candidateId)?.let { path ->
                         cb(path)
                     }
                 }
             }
+        } catch (e: Exception) {
+            // 无权限/安全异常：不崩溃，等用户授权后重试
         }
     }
 

@@ -69,7 +69,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final enabled =
           prefs.getBool('screenshot_ledger_enabled') ?? false;
       if (enabled) {
-        await ScreenshotWatcher.start();
+        // 启动时不弹权限框：权限未授予则由数据页开关引导
+        await ScreenshotWatcher.start(requestPermission: false);
       }
     } catch (_) {}
   }

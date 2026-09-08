@@ -31,6 +31,9 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
   bool _biometricEnabled = false;
   bool _screenshotEnabled = false;
 
+  /// 截屏监听是否真正生效（权限授予 + 原生注册成功）
+  bool _screenshotWatchActive = false;
+
   @override
   void initState() {
     super.initState();
@@ -38,9 +41,15 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
       BiometricService.instance.isEnabled().then((v) {
         if (mounted) setState(() => _biometricEnabled = v);
       });
-      SharedPreferences.getInstance().then((prefs) {
+      SharedPreferences.getInstance().then((prefs) async {
         final v = prefs.getBool('screenshot_ledger_enabled') ?? false;
-        if (mounted) setState(() => _screenshotEnabled = v);
+        final active = v ? await ScreenshotWatcher.isWatching() : false;
+        if (mounted) {
+          setState(() {
+            _screenshotEnabled = v;
+            _screenshotWatchActive = active;
+          });
+        }
       });
     }
   }
@@ -61,26 +70,78 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
       return;
     }
     setState(() => _screenshotEnabled = v);
+
+    if (v) {
+      final status = await ScreenshotWatcher.start();
+      if (status == 'error') {
+        if (mounted) setState(() => _screenshotEnabled = false);
+        _toast('启动截屏监听失败');
+        return;
+      }
+      // 缺权限时原生已发起系统权限请求；等待用户操作并轮询实际生效状态
+      var watching = false;
+      for (var i = 0; i < 10; i++) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        watching = await ScreenshotWatcher.isWatching();
+        if (watching) break;
+      }
+      if (!mounted) return;
+      setState(() {
+        _screenshotEnabled = true;
+        _screenshotWatchActive = watching;
+      });
+      if (watching) {
+        _toast('截屏记账已开启：截图账单后会自动识别');
+      } else {
+        _showPermissionGuide();
+      }
+    } else {
+      await ScreenshotWatcher.stop();
+      if (mounted) {
+        setState(() {
+          _screenshotEnabled = false;
+          _screenshotWatchActive = false;
+        });
+      }
+      _toast('截屏记账已关闭');
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('screenshot_ledger_enabled', v);
     } catch (_) {}
+  }
 
-    if (v) {
-      final status = await ScreenshotWatcher.start();
-      switch (status) {
-        case 'no_permission':
-          _toast('请在系统弹窗中允许「照片和视频」权限后重新开启');
-          break;
-        case 'error':
-          _toast('启动截屏监听失败');
-          break;
-        default:
-          _toast('截屏记账已开启：截图账单后会自动识别');
-      }
-    } else {
-      await ScreenshotWatcher.stop();
-      _toast('截屏记账已关闭');
+  /// 权限未生效引导：解释 + 一键跳系统设置
+  Future<void> _showPermissionGuide() async {
+    if (!mounted) return;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('需要「照片和视频」权限'),
+        content: const Text(
+          '截屏记账需要读取系统截图才能识别账单。\n\n'
+          '若刚才没有出现权限弹窗（可能已被拒绝），请到系统设置中手动开启「照片和视频」权限，然后回到这里重新打开开关。',
+          style: TextStyle(fontSize: 13, height: 1.6),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('稍后'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.accent,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('去系统设置'),
+          ),
+        ],
+      ),
+    );
+    if (go == true) {
+      await ScreenshotWatcher.openAppSettings();
     }
   }
 
@@ -121,7 +182,14 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     );
     if (picked != null) {
       await ref.read(backgroundThemeProvider.notifier).setTheme(picked);
-      _toast('背景已切换为「${picked.name}」');
+      // 主题切换应立即生效：停用自定义背景（图片保留，可随时在背景管理中重新启用）
+      final hadCustom = ref.read(customBackgroundsProvider).active != null;
+      if (hadCustom) {
+        await ref.read(customBackgroundsProvider.notifier).deactivate();
+      }
+      _toast(hadCustom
+          ? '已切换为「${picked.name}」主题（自定义背景已停用，可在背景管理中重新启用）'
+          : '背景已切换为「${picked.name}」');
     }
   }
 
@@ -412,11 +480,17 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                           style: TextStyle(fontWeight: FontWeight.w600)),
                       const SizedBox(height: 3),
                       Text(
-                        '截屏账单后自动识别并弹窗确认；需授予图片读取权限，且应用在后台运行',
+                        _screenshotEnabled
+                            ? (_screenshotWatchActive
+                                ? '已开启：截图账单后自动识别（请保持应用在后台运行）'
+                                : '已开启但未生效：请在系统设置中允许「照片和视频」权限')
+                            : '截屏账单后自动识别并弹窗确认；需授予照片权限且在后台运行',
                         style: TextStyle(
                             fontSize: 12,
                             height: 1.4,
-                            color: Colors.black.withValues(alpha: 0.60)),
+                            color: _screenshotEnabled && !_screenshotWatchActive
+                                ? AppTheme.expenseColor
+                                : Colors.black.withValues(alpha: 0.60)),
                       ),
                     ],
                   ),

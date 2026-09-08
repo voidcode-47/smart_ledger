@@ -203,6 +203,17 @@ class CustomBackgroundsNotifier
     await _persist();
   }
 
+  /// 停用自定义背景（保留图片列表，仅不再作为背景显示）。
+  /// 用户显式选择主题时调用，保证主题切换立即生效。
+  Future<void> deactivate() async {
+    if (state.items.isEmpty) return;
+    state = CustomBackgroundsState(items: state.items, activeId: null);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(ThemeConfig.customBgActiveKey);
+    } catch (_) {}
+  }
+
   /// 调节透明度（0.2 ~ 1.0）
   Future<void> setOpacity(String id, double opacity) async {
     final v = opacity.clamp(0.2, 1.0);

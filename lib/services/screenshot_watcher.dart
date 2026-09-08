@@ -15,8 +15,10 @@ class ScreenshotWatcher {
 
   static bool get isStarted => _started;
 
-  /// 启动监听。返回 started / no_permission / error
-  static Future<String> start() async {
+  /// 启动监听。返回 started / no_permission / error。
+  /// [requestPermission] 为 true 时，若缺权限会自动发起系统权限请求
+  /// （App 冷启动自动开启时传 false，避免每次启动都弹权限框）。
+  static Future<String> start({bool requestPermission = true}) async {
     _started = true;
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'onScreenshot') {
@@ -28,7 +30,9 @@ class ScreenshotWatcher {
       return null;
     });
     try {
-      return await _channel.invokeMethod<String>('startWatch') ?? 'error';
+      return await _channel.invokeMethod<String>(
+              'startWatch', {'request': requestPermission}) ??
+          'error';
     } catch (_) {
       return 'error';
     }
@@ -49,5 +53,12 @@ class ScreenshotWatcher {
     } catch (_) {
       return false;
     }
+  }
+
+  /// 跳转到系统应用设置页（引导用户授予照片权限）
+  static Future<void> openAppSettings() async {
+    try {
+      await _channel.invokeMethod('openAppSettings');
+    } catch (_) {}
   }
 }
