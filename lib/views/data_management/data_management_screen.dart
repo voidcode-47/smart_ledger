@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/backup_service.dart';
 import '../../services/biometric_service.dart';
 import '../../services/csv_service.dart';
+import '../../services/screenshot_watcher.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/theme_config.dart';
 import '../../viewmodels/theme_providers.dart';
@@ -26,6 +28,7 @@ class DataManagementScreen extends ConsumerStatefulWidget {
 class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
   bool _busy = false;
   bool _biometricEnabled = false;
+  bool _screenshotEnabled = false;
 
   @override
   void initState() {
@@ -33,6 +36,10 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     if (Platform.isAndroid) {
       BiometricService.instance.isEnabled().then((v) {
         if (mounted) setState(() => _biometricEnabled = v);
+      });
+      SharedPreferences.getInstance().then((prefs) {
+        final v = prefs.getBool('screenshot_ledger_enabled') ?? false;
+        if (mounted) setState(() => _screenshotEnabled = v);
       });
     }
   }
@@ -44,6 +51,36 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
         content: Text(msg),
         duration: const Duration(seconds: 3),
       ));
+  }
+
+  // ---------- 截屏记账开关 ----------
+  Future<void> _toggleScreenshotLedger(bool v) async {
+    if (!Platform.isAndroid) {
+      _toast('截屏记账仅支持 Android');
+      return;
+    }
+    setState(() => _screenshotEnabled = v);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('screenshot_ledger_enabled', v);
+    } catch (_) {}
+
+    if (v) {
+      final status = await ScreenshotWatcher.start();
+      switch (status) {
+        case 'no_permission':
+          _toast('请在系统弹窗中允许「照片和视频」权限后重新开启');
+          break;
+        case 'error':
+          _toast('启动截屏监听失败');
+          break;
+        default:
+          _toast('截屏记账已开启：截图账单后会自动识别');
+      }
+    } else {
+      await ScreenshotWatcher.stop();
+      _toast('截屏记账已关闭');
+    }
   }
 
   // ---------- 外观：自定义背景图片 ----------
@@ -395,6 +432,49 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 16),
+
+        // ---------- 截屏记账 ----------
+        if (Platform.isAndroid)
+          GlassCard(
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentBg,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.screenshot_monitor_rounded,
+                      color: AppTheme.accent),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('截屏记账',
+                          style: TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 3),
+                      Text(
+                        '截屏账单后自动识别并弹窗确认；需授予图片读取权限，且应用在后台运行',
+                        style: TextStyle(
+                            fontSize: 12,
+                            height: 1.4,
+                            color: Colors.black.withValues(alpha: 0.60)),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _screenshotEnabled,
+                  activeThumbColor: AppTheme.accent,
+                  onChanged: _toggleScreenshotLedger,
+                ),
+              ],
+            ),
+          ),
         const SizedBox(height: 16),
 
         // ---------- 自定义背景 ----------
