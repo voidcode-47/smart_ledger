@@ -25,7 +25,8 @@ class _MiniGamesScreenState extends State<MiniGamesScreen> {
 
   List<MiniGame> _filtered(List<MiniGame> games) {
     final q = _query.trim();
-    var list = games;
+    // 复制为可变列表（MiniGame.offline 等是 const 列表，不可直接 sort）
+    var list = games.toList();
     if (_category != null) {
       list = list.where((g) => g.category == _category).toList();
     }
