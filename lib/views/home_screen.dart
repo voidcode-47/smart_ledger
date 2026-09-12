@@ -339,7 +339,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     return BottomAppBar(
-      color: Colors.white,
+      // 跟随主题：深色主题下为深色底（未选中图标为浅色半透明），浅色主题下为白色底
+      color: AppTheme.cardColor,
       surfaceTintColor: Colors.transparent,
       shape: const CircularNotchedRectangle(),
       notchMargin: 8,

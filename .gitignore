@@ -49,3 +49,6 @@ app.*.map.json
 
 # 安装包输出目录（Inno Setup）
 /dist/
+
+release/
+
