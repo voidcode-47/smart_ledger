@@ -14,8 +14,7 @@ import '../../widgets/glass_card.dart';
 import '../background/background_manager_screen.dart';
 import '../category_management/category_management_screen.dart';
 import '../tools/decision_wheel_screen.dart';
-import '../tools/games/game_2048_screen.dart';
-import '../tools/games/snake_screen.dart';
+import '../tools/minigames_screen.dart';
 
 /// 数据管理：数据库备份恢复 + CSV 导出/导入 + 生物识别锁（Android）
 class DataManagementScreen extends ConsumerStatefulWidget {
@@ -488,26 +487,19 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                       builder: (_) => const DecisionWheelScreen()),
                 ),
               ),
-              Divider(height: 1, color: Colors.black.withValues(alpha: 0.06)),
-              const SizedBox(height: 8),
-              _toolRow(
-                icon: Icons.apps_rounded,
-                title: '2048',
-                subtitle: '数字合并挑战 · 冲击最高分',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const Game2048Screen()),
+              if (Platform.isAndroid) ...[
+                Divider(
+                    height: 1, color: Colors.black.withValues(alpha: 0.06)),
+                const SizedBox(height: 8),
+                _toolRow(
+                  icon: Icons.sports_esports_outlined,
+                  title: '小游戏合集',
+                  subtitle: '2048 / 俄罗斯方块 / 贪吃蛇 / 扫雷等 8 款免费游戏',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const MiniGamesScreen()),
+                  ),
                 ),
-              ),
-              Divider(height: 1, color: Colors.black.withValues(alpha: 0.06)),
-              const SizedBox(height: 8),
-              _toolRow(
-                icon: Icons.sports_esports_outlined,
-                title: '贪吃蛇',
-                subtitle: '经典街机 · 速度随分数提升',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SnakeScreen()),
-                ),
-              ),
+              ],
               const SizedBox(height: 2),
             ],
           ),
