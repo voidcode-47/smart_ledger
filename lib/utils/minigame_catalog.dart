@@ -1,9 +1,11 @@
 /// 小游戏合集目录。
 ///
-/// 所有离线游戏均为公开免费的开源 HTML5 项目（MIT 等宽松许可），
-/// 完整源码打包在 assets/minigames/<id>/ 下，无需联网即可游玩；
+/// 离线游戏为「mini-browser-games」开源合集（MIT），115 款零依赖单文件
+/// HTML5 游戏，完整源码打包在 assets/minigames/ 下，无需联网即可游玩；
 /// 联网游戏为开源作者官方在线 Demo 页面，需要网络可达。
 library;
+
+import 'minigame_library_data.dart';
 
 /// 虚拟按键（供键盘类游戏在触屏上操作）
 class MiniGameKey {
@@ -63,6 +65,12 @@ class MiniGame {
   final String? onlineUrl;
   final MiniGameInput input;
 
+  /// 质量分级（SSS/SS/S/A/D，来自合集维护方的 GAME_TIERS）
+  final String? tier;
+
+  /// 分类（策略养成/动作射击/竞速体育/益智棋牌/休闲经营）
+  final String? category;
+
   const MiniGame({
     required this.id,
     required this.title,
@@ -73,6 +81,8 @@ class MiniGame {
     required this.input,
     this.assetIndex,
     this.onlineUrl,
+    this.tier,
+    this.category,
   });
 
   /// 是否需要联网
@@ -108,109 +118,9 @@ class MiniGame {
           ],
       };
 
-  /// 离线游戏（打包在 assets，无需联网）
-  static const List<MiniGame> offline = [
-    MiniGame(
-      id: '2048',
-      title: '2048',
-      subtitle: '数字合并 · 滑动屏幕或方向键',
-      icon: '🔢',
-      license: 'MIT · gabrielecirulli/2048',
-      source: 'https://github.com/gabrielecirulli/2048',
-      input: MiniGameInput.none,
-      assetIndex: 'assets/minigames/2048/index.html',
-    ),
-    MiniGame(
-      id: 'tetris',
-      title: '俄罗斯方块',
-      subtitle: '经典消除 · 左/右移动、上旋转、下加速',
-      icon: '🧩',
-      license: 'MIT · jakesgordon/javascript-tetris',
-      source: 'https://github.com/jakesgordon/javascript-tetris',
-      input: MiniGameInput.dPadRotate,
-      assetIndex: 'assets/minigames/tetris/index.html',
-    ),
-    MiniGame(
-      id: 'snake',
-      title: '贪吃蛇',
-      subtitle: '经典街机 · 方向键控制，吃到越长',
-      icon: '🐍',
-      license: 'MIT · patorjk/JavaScript-Snake',
-      source: 'https://github.com/patorjk/JavaScript-Snake',
-      input: MiniGameInput.dPad,
-      assetIndex: 'assets/minigames/snake/src/index.html',
-    ),
-    MiniGame(
-      id: 'minesweeper',
-      title: '扫雷',
-      subtitle: '逻辑推理 · 点开格子，避开地雷',
-      icon: '💣',
-      license: 'MIT · Joeynoh/HTML5-Minesweeper',
-      source: 'https://github.com/Joeynoh/HTML5-Minesweeper',
-      input: MiniGameInput.none,
-      assetIndex: 'assets/minigames/minesweeper/index.html',
-    ),
-    MiniGame(
-      id: 'memory',
-      title: '记忆翻牌',
-      subtitle: '翻牌配对 · 考验记忆力',
-      icon: '🃏',
-      license: 'MIT · mmenavas/memory-game',
-      source: 'https://github.com/mmenavas/memory-game',
-      input: MiniGameInput.none,
-      assetIndex: 'assets/minigames/memory/index.html',
-    ),
-    MiniGame(
-      id: 'breakout',
-      title: '打砖块',
-      subtitle: '弹球破砖 · 左右移动挡板',
-      icon: '🏓',
-      license: 'MIT · DhanushNehru/breakout-game',
-      source: 'https://github.com/DhanushNehru/breakout-game',
-      input: MiniGameInput.leftRight,
-      assetIndex: 'assets/minigames/breakout/index.html',
-    ),
-    MiniGame(
-      id: 'sudoku',
-      title: '数独',
-      subtitle: '数字逻辑 · 每一行每一列不重复',
-      icon: '🧮',
-      license: 'MIT · vincenzo-afk/sudokuflow',
-      source: 'https://github.com/vincenzo-afk/sudokuflow',
-      input: MiniGameInput.none,
-      assetIndex: 'assets/minigames/sudoku/index.html',
-    ),
-    MiniGame(
-      id: 'tictactoe',
-      title: '井字棋',
-      subtitle: '三子连线 · 与电脑对战',
-      icon: '⭕',
-      license: 'MIT · ramazancetinkaya/tictactoe',
-      source: 'https://github.com/ramazancetinkaya/tictactoe',
-      input: MiniGameInput.none,
-      assetIndex: 'assets/minigames/tictactoe/index.html',
-    ),
-    MiniGame(
-      id: 'hangman',
-      title: '刽子手',
-      subtitle: '猜英文单词 · 点字母，别让小人上吊',
-      icon: '🎯',
-      license: 'MIT · abdoutech19/hangman-game',
-      source: 'https://github.com/abdoutech19/hangman-game',
-      input: MiniGameInput.none,
-      assetIndex: 'assets/minigames/hangman/index.html',
-    ),
-    MiniGame(
-      id: 'pong',
-      title: 'Pong 弹球',
-      subtitle: '双人对打 / 对战电脑 · Q/A 上下',
-      icon: '🏓',
-      license: 'MIT · jakesgordon/javascript-pong',
-      source: 'https://github.com/jakesgordon/javascript-pong',
-      input: MiniGameInput.upDown,
-      assetIndex: 'assets/minigames/pong/index.html',
-    ),
-  ];
+  /// 离线游戏（115 款零依赖单文件，打包在 assets/minigames/，无需联网）
+  /// 数据源：minigame_library_data.dart（由 mini-browser-games README 生成）
+  static const List<MiniGame> offline = miniGameLibrary;
 
   /// 联网游戏（开源作者官方在线 Demo，需要网络）
   static const List<MiniGame> online = [

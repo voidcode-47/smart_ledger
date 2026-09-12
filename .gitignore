@@ -52,3 +52,12 @@ app.*.map.json
 
 release/
 
+
+# 游戏库下载/解析临时文件
+_games.zip
+_games_src/
+_*.ps1
+_tiers.json
+_readme.md
+_assets_list.txt
+
