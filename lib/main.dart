@@ -63,6 +63,18 @@ class SmartLedgerApp extends ConsumerWidget {
     // 黑色背景主题 → 全局深色模式（卡片/文字/输入框等整体适配）
     final isDark = ref.watch(backgroundThemeProvider).isDark;
     AppTheme.setDark(isDark);
+    // Android 系统状态栏/底部导航栏跟随主题：
+    // 深色主题下浅色图标 + 深色导航栏，浅色主题下深色图标 + 白色导航栏
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor:
+          isDark ? const Color(0xFF171B21) : Colors.white,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ));
     return MaterialApp(
       title: '智慧记账',
       debugShowCheckedModeBanner: false,

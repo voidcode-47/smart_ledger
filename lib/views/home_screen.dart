@@ -9,6 +9,7 @@ import '../models/transaction_model.dart';
 import '../services/receipt_ocr_service.dart';
 import '../utils/app_theme.dart';
 import '../utils/responsive.dart';
+import '../viewmodels/theme_providers.dart';
 import '../widgets/gradient_background.dart';
 import 'add_transaction/add_transaction_sheet.dart';
 import 'add_transaction/quick_add_dialog.dart';
@@ -188,6 +189,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final desktop = Responsive.isDesktop(context);
+    // 监听背景主题：切换主题时重建本页，底部导航/浮动按钮等动态色立即刷新
+    ref.watch(backgroundThemeProvider);
 
     return GradientBackground(
       child: Scaffold(

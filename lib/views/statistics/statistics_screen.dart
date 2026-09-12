@@ -36,7 +36,8 @@ class StatisticsScreen extends ConsumerWidget {
         Text('统计报表',
             style: AppTextStyles.pageTitle.copyWith(color: pageTitleColor)),
         const SizedBox(height: 16),
-        const MonthlySummaryCard(),
+        // ignore: prefer_const_constructors —— 必须非 const：主题切换时强制重建刷新颜色
+          MonthlySummaryCard(),
         const SizedBox(height: 16),
         GlassCard(
           child: Column(
@@ -57,7 +58,8 @@ class StatisticsScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        const CategoryRankingCard(),
+        // ignore: prefer_const_constructors —— 必须非 const：主题切换时强制重建刷新颜色
+          CategoryRankingCard(),
         const SizedBox(height: 16),
         _categoryFilter(ref, filter, categoriesAsync),
         const SizedBox(height: 16),

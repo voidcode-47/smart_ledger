@@ -26,6 +26,8 @@ class DashboardScreen extends ConsumerWidget {
     final recent = ref.watch(recentTransactionsProvider);
     final listState = ref.watch(transactionListProvider);
     final month = ref.watch(selectedMonthProvider);
+    // 监听背景主题：切换主题时重建本页，让 AppTheme 动态色（卡片/文字/收入支出色）立即刷新
+    ref.watch(backgroundThemeProvider);
 
     final now = DateTime.now();
     final canGoNext = month.year < now.year ||
@@ -36,7 +38,8 @@ class DashboardScreen extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 96),
         children: [
-          const QuoteCard(),
+          // ignore: prefer_const_constructors —— 必须非 const：主题切换时强制重建刷新卡片颜色
+          QuoteCard(),
           const SizedBox(height: 12),
           _monthHeader(ref, month, canGoNext),
           const SizedBox(height: 12),
@@ -53,7 +56,8 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const BudgetCard(),
+          // ignore: prefer_const_constructors —— 必须非 const：主题切换时强制重建刷新卡片颜色
+          BudgetCard(),
           const SizedBox(height: 16),
           CategoryDonutCard(slices: slices),
           const SizedBox(height: 16),
