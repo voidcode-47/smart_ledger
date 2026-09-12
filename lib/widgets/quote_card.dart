@@ -30,15 +30,19 @@ class _QuoteCardState extends State<QuoteCard> {
       _quote = _remoteCache!;
     } else {
       _quote = QuoteUtils.random();
-      _tryRemote();
+      // 首次进入：本地格言立即显示，联网获取在后台静默完成（不转圈）
+      _tryRemote(silent: true);
     }
   }
 
   /// 联网获取：成功则更新缓存与当前显示；失败时根据 [swapOnFail] 决定是否换本地。
-  /// 刷新期间保持当前格言不变（只转圈），完成后一次性更新，避免"闪两条"。
-  Future<void> _tryRemote({bool swapOnFail = false}) async {
+  /// [silent] 为 true 时后台静默获取（不显示转圈）；无论哪种方式，
+  /// 刷新期间都保持当前格言不变，完成后一次性更新，避免"闪两条"。
+  Future<void> _tryRemote(
+      {bool swapOnFail = false, bool silent = false}) async {
     if (_loading) return;
-    setState(() => _loading = true);
+    _loading = true;
+    if (!silent && mounted) setState(() {});
     final remote = await QuoteFetcher.fetchRemote();
     if (!mounted) return;
     setState(() {
@@ -117,8 +121,7 @@ class _QuoteCardState extends State<QuoteCard> {
                             color: Colors.black.withValues(alpha: 0.45)),
                       )
                     : Icon(Icons.refresh_rounded,
-                        size: 18,
-                        color: Colors.black.withValues(alpha: 0.55)),
+                        size: 18, color: Colors.black.withValues(alpha: 0.55)),
               ),
               Icon(Icons.copy_rounded,
                   size: 15, color: Colors.black.withValues(alpha: 0.35)),

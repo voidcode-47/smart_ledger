@@ -19,30 +19,34 @@ class QuoteFetcher {
   /// 从一言 API 拉取一条格言；失败或内容不合规返回 null
   static Future<QuoteItem?> fetchRemote() async {
     try {
-      final client = HttpClient()
-        ..connectionTimeout = const Duration(seconds: 6);
-      try {
-        final req = await client.getUrl(Uri.parse(
-            'https://v1.hitokoto.cn/?encode=json&c=d&c=i&c=e&c=f&c=k'));
-        req.headers.set(HttpHeaders.userAgentHeader, 'smart_ledger/1.0');
-        final resp = await req.close();
-        if (resp.statusCode != 200) return null;
-        final body = await resp.transform(utf8.decoder).join();
-        final data = jsonDecode(body) as Map<String, dynamic>;
-        final text = (data['hitokoto'] as String?)?.trim();
-        if (text == null || text.isEmpty) return null;
-        if (_blocked.any(text.toLowerCase().contains)) return null;
-
-        final from = (data['from'] as String?)?.trim() ?? '';
-        final who = (data['from_who'] as String?)?.trim() ?? '';
-        final source =
-            [who, from].where((s) => s.isNotEmpty).join('·').trim();
-        return QuoteItem(text, source.isEmpty ? '一言' : source);
-      } finally {
-        client.close();
-      }
+      // 整体限时 3 秒：弱网/断网时立即回退本地，避免刷新转圈过久
+      return await _fetchOnce().timeout(const Duration(seconds: 3));
     } catch (_) {
-      return null; // 网络异常/超时：回退本地
+      return null; // 网络异常/超时：退回本地
+    }
+  }
+
+  /// 实际请求（独立方法以便对整体限时）
+  static Future<QuoteItem?> _fetchOnce() async {
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 2);
+    try {
+      final req = await client.getUrl(
+          Uri.parse('https://v1.hitokoto.cn/?encode=json&c=d&c=i&c=e&c=f&c=k'));
+      req.headers.set(HttpHeaders.userAgentHeader, 'smart_ledger/1.0');
+      final resp = await req.close();
+      if (resp.statusCode != 200) return null;
+      final body = await resp.transform(utf8.decoder).join();
+      final data = jsonDecode(body) as Map<String, dynamic>;
+      final text = (data['hitokoto'] as String?)?.trim();
+      if (text == null || text.isEmpty) return null;
+      if (_blocked.any(text.toLowerCase().contains)) return null;
+
+      final from = (data['from'] as String?)?.trim() ?? '';
+      final who = (data['from_who'] as String?)?.trim() ?? '';
+      final source = [who, from].where((s) => s.isNotEmpty).join('·').trim();
+      return QuoteItem(text, source.isEmpty ? '一言' : source);
+    } finally {
+      client.close();
     }
   }
 }

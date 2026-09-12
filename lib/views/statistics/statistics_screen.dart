@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/category_model.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/category_utils.dart';
+import '../../utils/theme_config.dart';
+import '../../viewmodels/theme_providers.dart';
 import '../../viewmodels/transaction_providers.dart';
 import '../../widgets/category_ranking_card.dart';
 import '../../widgets/glass_card.dart';
@@ -24,11 +26,15 @@ class StatisticsScreen extends ConsumerWidget {
     final range = ref.watch(trendRangeProvider);
     final filter = ref.watch(trendCategoryFilterProvider);
     final categoriesAsync = ref.watch(expenseCategoriesProvider);
+    // 黑色背景下页面标题反白，保证可读
+    final pageTitleColor =
+        ThemeConfig.onBackground(ref.watch(backgroundThemeProvider).isDark);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),
       children: [
-        const Text('统计报表', style: AppTextStyles.pageTitle),
+        Text('统计报表',
+            style: AppTextStyles.pageTitle.copyWith(color: pageTitleColor)),
         const SizedBox(height: 16),
         const MonthlySummaryCard(),
         const SizedBox(height: 16),
@@ -117,8 +123,8 @@ class StatisticsScreen extends ConsumerWidget {
   }
 
   // ---------- 分类筛选（动态分类） ----------
-  Widget _categoryFilter(
-      WidgetRef ref, String? filter, AsyncValue<List<Category>> categoriesAsync) {
+  Widget _categoryFilter(WidgetRef ref, String? filter,
+      AsyncValue<List<Category>> categoriesAsync) {
     Widget chip(String label, {String? value, Color? selectedColor}) {
       final selected = filter == value;
       return Padding(
@@ -126,8 +132,7 @@ class StatisticsScreen extends ConsumerWidget {
         child: ChoiceChip(
           label: Text(label),
           selected: selected,
-          selectedColor:
-              selectedColor ?? AppTheme.accent,
+          selectedColor: selectedColor ?? AppTheme.accent,
           backgroundColor: Colors.black.withValues(alpha: 0.06),
           labelStyle: TextStyle(
             fontSize: 12,

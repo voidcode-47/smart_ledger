@@ -9,6 +9,7 @@ class BackgroundTheme {
     required this.gradientEnd,
     required this.blob1,
     required this.blob2,
+    this.isDark = false,
   });
 
   final String id;
@@ -17,6 +18,9 @@ class BackgroundTheme {
   final Color gradientEnd;
   final Color blob1;
   final Color blob2;
+
+  /// 是否为深色背景（用于决定背景上文字/图标的取色）
+  final bool isDark;
 }
 
 /// 预置背景主题与持久化配置
@@ -32,46 +36,25 @@ class ThemeConfig {
   static const String customBgItemsKey = 'custom_background_items';
   static const String customBgActiveKey = 'custom_background_active';
 
+  /// 精简为两套主题：白色 / 黑色。
+  /// 旧版本保存的主题 id（青绿/暖阳/雾蓝/樱粉/墨玉）在 [byId] 中统一回退到白色。
   static const List<BackgroundTheme> backgrounds = [
     BackgroundTheme(
-      id: 'mint',
-      name: '青绿',
-      gradientStart: Color(0xFFF6F3EC),
-      gradientEnd: Color(0xFFE8F1EE),
-      blob1: Color(0xFF14B8A6),
-      blob2: Color(0xFFE8C9A0),
+      id: 'white',
+      name: '白色',
+      gradientStart: Color(0xFFFFFFFF),
+      gradientEnd: Color(0xFFF3F4F6),
+      blob1: Color(0xFFE5EDF2),
+      blob2: Color(0xFFF2EFE8),
     ),
     BackgroundTheme(
-      id: 'sun',
-      name: '暖阳',
-      gradientStart: Color(0xFFFBF6EC),
-      gradientEnd: Color(0xFFF6E8D8),
-      blob1: Color(0xFFF0A868),
-      blob2: Color(0xFFF3D9B1),
-    ),
-    BackgroundTheme(
-      id: 'mist',
-      name: '雾蓝',
-      gradientStart: Color(0xFFEFF4FA),
-      gradientEnd: Color(0xFFE3ECF7),
-      blob1: Color(0xFF7CA8E8),
-      blob2: Color(0xFFB9CDE8),
-    ),
-    BackgroundTheme(
-      id: 'blossom',
-      name: '樱粉',
-      gradientStart: Color(0xFFFAF2F4),
-      gradientEnd: Color(0xFFF5E6EC),
-      blob1: Color(0xFFE8A0B8),
-      blob2: Color(0xFFF2CDD9),
-    ),
-    BackgroundTheme(
-      id: 'jade',
-      name: '墨玉',
-      gradientStart: Color(0xFFEFF3EF),
-      gradientEnd: Color(0xFFDEE9E0),
-      blob1: Color(0xFF4C8C6E),
-      blob2: Color(0xFFA9C4B2),
+      id: 'black',
+      name: '黑色',
+      isDark: true,
+      gradientStart: Color(0xFF212226),
+      gradientEnd: Color(0xFF141518),
+      blob1: Color(0xFF2B2D33),
+      blob2: Color(0xFF24262B),
     ),
   ];
 
@@ -79,6 +62,12 @@ class ThemeConfig {
     for (final t in backgrounds) {
       if (t.id == id) return t;
     }
+    // 未知/旧版主题 id 统一回退到白色
     return backgrounds.first;
+  }
+
+  /// 背景之上的文字/图标取色：黑色背景反白，保证可读
+  static Color onBackground(bool isDark, {double alpha = 0.80}) {
+    return (isDark ? Colors.white : Colors.black).withValues(alpha: alpha);
   }
 }

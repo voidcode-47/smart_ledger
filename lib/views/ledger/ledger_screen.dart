@@ -5,6 +5,8 @@ import '../../models/category_model.dart';
 import '../../models/transaction_model.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/format_utils.dart';
+import '../../utils/theme_config.dart';
+import '../../viewmodels/theme_providers.dart';
 import '../../viewmodels/transaction_providers.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/transaction_tile.dart';
@@ -49,11 +51,15 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
   Widget build(BuildContext context) {
     final listAsync = ref.watch(transactionListProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
+    // 黑色背景下页面标题/空状态文字反白
+    final dark = ref.watch(backgroundThemeProvider).isDark;
+    final pageTitleColor = ThemeConfig.onBackground(dark);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),
       children: [
-        const Text('全部流水', style: AppTextStyles.pageTitle),
+        Text('全部流水',
+            style: AppTextStyles.pageTitle.copyWith(color: pageTitleColor)),
         const SizedBox(height: 12),
         _searchField(),
         const SizedBox(height: 8),
@@ -70,16 +76,17 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
             padding: const EdgeInsets.symmetric(vertical: 32),
             child: Center(
                 child: Text('流水加载失败：$e',
-                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary))),
+                    style: const TextStyle(
+                        fontSize: 13, color: AppTheme.textSecondary))),
           ),
           data: (all) {
-            final filtered = _filter(
-                all, _searchCtrl.text, _typeFilter, _categoryFilter);
+            final filtered =
+                _filter(all, _searchCtrl.text, _typeFilter, _categoryFilter);
             if (all.isEmpty) {
-              return _emptyHint('还没有任何流水，点击右下角 + 记一笔吧');
+              return _emptyHint('还没有任何流水，点击右下角 + 记一笔吧', dark: dark);
             }
             if (filtered.isEmpty) {
-              return _emptyHint('未找到匹配的流水，试试调整搜索或筛选');
+              return _emptyHint('未找到匹配的流水，试试调整搜索或筛选', dark: dark);
             }
             return _groupedList(filtered);
           },
@@ -96,8 +103,8 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
       decoration: InputDecoration(
         hintText: '搜索备注或分类…',
         hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.40)),
-        prefixIcon:
-            Icon(Icons.search_rounded, color: Colors.black.withValues(alpha: 0.60)),
+        prefixIcon: Icon(Icons.search_rounded,
+            color: Colors.black.withValues(alpha: 0.60)),
         suffixIcon: _searchCtrl.text.isEmpty
             ? null
             : IconButton(
@@ -117,7 +124,6 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
   }
 
   Widget _filters(List<Category> categories) {
-
     Widget typeChip(String value, String label) {
       final selected = _typeFilter == value;
       return ChoiceChip(
@@ -181,13 +187,14 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
     );
   }
 
-  Widget _emptyHint(String text) {
+  Widget _emptyHint(String text, {bool dark = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: Center(
         child: Text(text,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.black.withValues(alpha: 0.50))),
+            style:
+                TextStyle(color: ThemeConfig.onBackground(dark, alpha: 0.50))),
       ),
     );
   }
@@ -200,15 +207,15 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
       final key = '${e.date.year}-${e.date.month}';
       groups.putIfAbsent(key, () => []).add(e);
     }
-    final keys = groups.keys.toList()
-      ..sort((a, b) => b.compareTo(a)); // 月份倒序
+    final keys = groups.keys.toList()..sort((a, b) => b.compareTo(a)); // 月份倒序
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (final key in keys)
           _monthGroup(
-              DateTime(int.parse(key.split('-')[0]), int.parse(key.split('-')[1])),
+              DateTime(
+                  int.parse(key.split('-')[0]), int.parse(key.split('-')[1])),
               groups[key]!),
       ],
     );

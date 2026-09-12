@@ -7,8 +7,6 @@ import 'package:window_manager/window_manager.dart';
 
 import '../models/transaction_model.dart';
 import '../services/receipt_ocr_service.dart';
-import '../services/recurring_service.dart';
-import '../viewmodels/transaction_providers.dart';
 import '../utils/app_theme.dart';
 import '../utils/responsive.dart';
 import '../widgets/gradient_background.dart';
@@ -50,30 +48,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       windowManager.addListener(this);
       trayManager.addListener(this);
       _setupDesktopIntegration();
-    }
-    _processRecurring();
-  }
-
-  /// 周期记账：启动时检查到期规则并自动入账（一次性，不打扰）
-  Future<void> _processRecurring() async {
-    try {
-      final result = await RecurringService.processDue();
-      if (result.due.isEmpty || !mounted) return;
-      final notifier = ref.read(transactionListProvider.notifier);
-      for (final e in result.due) {
-        await notifier.add(e);
-      }
-      // 全部入账成功后才推进下次日期，避免入账失败导致漏记
-      await RecurringService.commitRules(result.rules);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          content: Text('周期记账：${result.due.length} 笔已自动入账'),
-          duration: const Duration(seconds: 2),
-        ));
-    } catch (_) {
-      // 失败静默，下次启动重试
     }
   }
 
@@ -203,9 +177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final isIncome = r.category == '收入';
     final entry = TransactionEntry(
       amount: r.amount!,
-      type: isIncome
-          ? TransactionType.income
-          : TransactionType.expense,
+      type: isIncome ? TransactionType.income : TransactionType.expense,
       category: r.category ?? (isIncome ? '收入' : '其他'),
       date: r.date ?? DateTime.now(),
       note: r.note,
@@ -255,8 +227,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         floatingActionButtonLocation: desktop
             ? FloatingActionButtonLocation.endFloat
             : FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar:
-            desktop ? null : _buildMobileBottomBar(),
+        bottomNavigationBar: desktop ? null : _buildMobileBottomBar(),
       ),
     );
   }
@@ -316,7 +287,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ],
         ),
-        const VerticalDivider(width: 1, thickness: 1, color: AppTheme.dividerColor),
+        const VerticalDivider(
+            width: 1, thickness: 1, color: AppTheme.dividerColor),
         Expanded(
           child: IndexedStack(index: _index, children: _pages),
         ),

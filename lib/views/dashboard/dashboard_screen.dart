@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../utils/app_theme.dart';
 import '../../utils/format_utils.dart';
+import '../../utils/theme_config.dart';
+import '../../viewmodels/theme_providers.dart';
 import '../../viewmodels/transaction_providers.dart';
 import '../../widgets/budget_card.dart';
 import '../../widgets/count_up_text.dart';
@@ -36,75 +38,75 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           const QuoteCard(),
           const SizedBox(height: 12),
-        _monthHeader(ref, month, canGoNext),
-        const SizedBox(height: 12),
-        GlassCard(
-          child: Row(
-            children: [
-              _amountColumn('收入', summary.income, AppTheme.incomeColor),
-              _divider(),
-              _amountColumn('支出', summary.expense, AppTheme.expenseColor),
-              _divider(),
-              _amountColumn('结余', summary.balance, AppTheme.accent,
-                  animated: true),
-            ],
+          _monthHeader(ref, month, canGoNext),
+          const SizedBox(height: 12),
+          GlassCard(
+            child: Row(
+              children: [
+                _amountColumn('收入', summary.income, AppTheme.incomeColor),
+                _divider(),
+                _amountColumn('支出', summary.expense, AppTheme.expenseColor),
+                _divider(),
+                _amountColumn('结余', summary.balance, AppTheme.accent,
+                    animated: true),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        const BudgetCard(),
-        const SizedBox(height: 16),
-        CategoryDonutCard(slices: slices),
-        const SizedBox(height: 16),
-        GlassCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text('最近流水', style: AppTextStyles.sectionTitle),
-                  const Spacer(),
-                  if (listState.isLoading)
-                    const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              if (recent.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 28),
-                  child: Center(
-                    child: Text(
-                      '暂无流水，点击 + 开始记账',
-                      style:
-                          TextStyle(color: Colors.black.withValues(alpha: 0.50)),
-                    ),
-                  ),
-                )
-              else
-                ...recent.asMap().entries.map(
-                      (e) => StaggeredItem(
-                        key: ValueKey('recent_${e.value.id ?? e.key}'),
-                        index: e.key,
-                        child: TransactionTile(
-                          entry: e.value,
-                          onEdit: e.value.id == null
-                              ? null
-                              : () => AddTransactionSheet.show(context,
-                                  initial: e.value),
-                          onDelete: e.value.id == null
-                              ? null
-                              : () => ref
-                                  .read(transactionListProvider.notifier)
-                                  .remove(e.value.id!),
-                        ),
+          const SizedBox(height: 16),
+          const BudgetCard(),
+          const SizedBox(height: 16),
+          CategoryDonutCard(slices: slices),
+          const SizedBox(height: 16),
+          GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text('最近流水', style: AppTextStyles.sectionTitle),
+                    const Spacer(),
+                    if (listState.isLoading)
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                if (recent.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 28),
+                    child: Center(
+                      child: Text(
+                        '暂无流水，点击 + 开始记账',
+                        style: TextStyle(
+                            color: Colors.black.withValues(alpha: 0.50)),
                       ),
                     ),
-            ],
+                  )
+                else
+                  ...recent.asMap().entries.map(
+                        (e) => StaggeredItem(
+                          key: ValueKey('recent_${e.value.id ?? e.key}'),
+                          index: e.key,
+                          child: TransactionTile(
+                            entry: e.value,
+                            onEdit: e.value.id == null
+                                ? null
+                                : () => AddTransactionSheet.show(context,
+                                    initial: e.value),
+                            onDelete: e.value.id == null
+                                ? null
+                                : () => ref
+                                    .read(transactionListProvider.notifier)
+                                    .remove(e.value.id!),
+                          ),
+                        ),
+                      ),
+              ],
+            ),
           ),
-        ),
         ],
       ),
     );
@@ -112,22 +114,24 @@ class DashboardScreen extends ConsumerWidget {
 
   // ---------- 月份切换 ----------
   Widget _monthHeader(WidgetRef ref, DateTime month, bool canGoNext) {
+    // 黑色背景下反白，保证背景上的文字/图标可读
+    final dark = ref.watch(backgroundThemeProvider).isDark;
+    final onBg = ThemeConfig.onBackground(dark);
+    final onBgDim = ThemeConfig.onBackground(dark, alpha: 0.30);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
           onPressed: () => _shiftMonth(ref, -1),
-          icon: Icon(Icons.chevron_left_rounded,
-              color: Colors.black.withValues(alpha: 0.80)),
+          icon: Icon(Icons.chevron_left_rounded, color: onBg),
         ),
         Text(FormatUtils.monthTitle(month),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold, color: onBg)),
         IconButton(
           onPressed: canGoNext ? () => _shiftMonth(ref, 1) : null,
           icon: Icon(Icons.chevron_right_rounded,
-              color: canGoNext
-                  ? Colors.black.withValues(alpha: 0.80)
-                  : Colors.black.withValues(alpha: 0.15)),
+              color: canGoNext ? onBg : onBgDim),
         ),
       ],
     );

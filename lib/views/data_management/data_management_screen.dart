@@ -10,10 +10,12 @@ import '../../utils/app_theme.dart';
 import '../../utils/theme_config.dart';
 import '../../viewmodels/theme_providers.dart';
 import '../../viewmodels/transaction_providers.dart';
-import '../recurring/recurring_screen.dart';
 import '../../widgets/glass_card.dart';
 import '../background/background_manager_screen.dart';
 import '../category_management/category_management_screen.dart';
+import '../tools/decision_wheel_screen.dart';
+import '../tools/games/game_2048_screen.dart';
+import '../tools/games/snake_screen.dart';
 
 /// 数据管理：数据库备份恢复 + CSV 导出/导入 + 生物识别锁（Android）
 class DataManagementScreen extends ConsumerStatefulWidget {
@@ -126,8 +128,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-              color:
-                  selected ? AppTheme.accent : AppTheme.textSecondary,
+              color: selected ? AppTheme.accent : AppTheme.textSecondary,
             ),
           ),
         ],
@@ -277,7 +278,10 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),
       children: [
-        const Text('数据管理', style: AppTextStyles.pageTitle),
+        Text('数据管理',
+            style: AppTextStyles.pageTitle.copyWith(
+                color: ThemeConfig.onBackground(
+                    ref.watch(backgroundThemeProvider).isDark))),
         const SizedBox(height: 16),
 
         // ---------- 数据库信息 ----------
@@ -294,7 +298,8 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
               ),
             ),
             error: (e, _) => Text('数据库信息读取失败：$e',
-                style: const TextStyle(fontSize: 13, color: AppTheme.expenseColor)),
+                style: const TextStyle(
+                    fontSize: 13, color: AppTheme.expenseColor)),
             data: (info) => Row(
               children: [
                 const Icon(Icons.storage_rounded,
@@ -363,9 +368,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                   ),
                 ],
               ),
-              Divider(
-                  height: 1,
-                  color: Colors.black.withValues(alpha: 0.06)),
+              Divider(height: 1, color: Colors.black.withValues(alpha: 0.06)),
               const SizedBox(height: 8),
               // 自定义背景行
               Row(
@@ -419,50 +422,6 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
         ),
         const SizedBox(height: 16),
 
-        // ---------- 周期记账 ----------
-        GlassCard(
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppTheme.accentBg,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.event_repeat_rounded,
-                    color: AppTheme.accent),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('周期记账',
-                        style: TextStyle(fontWeight: FontWeight.w600)),
-                    SizedBox(height: 3),
-                    Text(
-                      '房租 / 生活费 / 工资每月自动入账',
-                      style: TextStyle(
-                          fontSize: 12, color: Colors.black54),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.chevron_right_rounded,
-                    color: Colors.black.withValues(alpha: 0.60)),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const RecurringScreen(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
         // ---------- 分类管理 ----------
         GlassCard(
           child: Row(
@@ -474,9 +433,8 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                   color: Colors.black.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child:
-                    const Icon(Icons.category_rounded,
-                        color: AppTheme.textPrimary),
+                child: const Icon(Icons.category_rounded,
+                    color: AppTheme.textPrimary),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -504,6 +462,53 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                   ),
                 ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // ---------- 趣味工具 ----------
+        GlassCard(
+          child: Column(
+            children: [
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 2, top: 2),
+                  child: Text('趣味工具', style: AppTextStyles.sectionTitle),
+                ),
+              ),
+              const SizedBox(height: 4),
+              _toolRow(
+                icon: Icons.casino_outlined,
+                title: '随机转盘',
+                subtitle: '选择困难？吃什么 / 去哪儿，转一下就知道',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const DecisionWheelScreen()),
+                ),
+              ),
+              Divider(height: 1, color: Colors.black.withValues(alpha: 0.06)),
+              const SizedBox(height: 8),
+              _toolRow(
+                icon: Icons.apps_rounded,
+                title: '2048',
+                subtitle: '数字合并挑战 · 冲击最高分',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const Game2048Screen()),
+                ),
+              ),
+              Divider(height: 1, color: Colors.black.withValues(alpha: 0.06)),
+              const SizedBox(height: 8),
+              _toolRow(
+                icon: Icons.sports_esports_outlined,
+                title: '贪吃蛇',
+                subtitle: '经典街机 · 速度随分数提升',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SnakeScreen()),
+                ),
+              ),
+              const SizedBox(height: 2),
             ],
           ),
         ),
@@ -637,6 +642,54 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
         ),
         const SizedBox(height: 16),
       ],
+    );
+  }
+
+  /// 趣味工具一行入口
+  Widget _toolRow({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppTheme.accentBg,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: AppTheme.accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black.withValues(alpha: 0.60)),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: Colors.black.withValues(alpha: 0.60)),
+          ],
+        ),
+      ),
     );
   }
 

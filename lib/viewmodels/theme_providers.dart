@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -99,10 +100,8 @@ final customBackgroundsProvider =
     StateNotifierProvider<CustomBackgroundsNotifier, CustomBackgroundsState>(
         (ref) => CustomBackgroundsNotifier());
 
-class CustomBackgroundsNotifier
-    extends StateNotifier<CustomBackgroundsState> {
-  CustomBackgroundsNotifier()
-      : super(const CustomBackgroundsState(items: [])) {
+class CustomBackgroundsNotifier extends StateNotifier<CustomBackgroundsState> {
+  CustomBackgroundsNotifier() : super(const CustomBackgroundsState(items: [])) {
     _load();
   }
 
@@ -118,7 +117,7 @@ class CustomBackgroundsNotifier
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(ThemeConfig.customBgItemsKey);
-      final activeId = prefs.getString(ThemeConfig.customBgActiveKey);
+      var activeId = prefs.getString(ThemeConfig.customBgActiveKey);
 
       // 旧版单图数据迁移
       final legacyPath = prefs.getString(ThemeConfig.customBgKey);
@@ -132,22 +131,50 @@ class CustomBackgroundsNotifier
           } catch (_) {}
         }
       }
-      if (items.isEmpty && legacyPath != null && File(legacyPath).existsSync()) {
+      var migrated = false;
+      if (items.isEmpty &&
+          legacyPath != null &&
+          File(legacyPath).existsSync()) {
         items.add(CustomBackgroundItem(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           path: legacyPath,
         ));
+        // 迁移的旧版单图：默认激活，并立即持久化
+        activeId = items.first.id;
+        migrated = true;
         await prefs.remove(ThemeConfig.customBgKey);
       }
       if (items.isEmpty) return;
 
+      // 关键修复：activeId 为 null 表示用户已显式停用（例如选择了背景主题），
+      // 重启后不得回退激活第一张，否则会覆盖用户切换主题的意图。
       state = CustomBackgroundsState(
         items: items,
-        activeId: (activeId != null && items.any((i) => i.id == activeId))
-            ? activeId
-            : items.first.id,
+        activeId: resolveActiveId(
+          [for (final i in items) i.id],
+          activeId,
+          // 仅真正执行了旧版迁移时才默认激活
+          migratedId: migrated ? items.first.id : null,
+        ),
       );
+      // 持久化本次解析结果（含迁移），保证与磁盘状态一致
+      await _persist();
     } catch (_) {}
+  }
+
+  /// 解析最终激活项（纯函数，便于单元测试）：
+  /// - [activeId] 有效（存在于 [itemIds]）时使用它；
+  /// - 否则只有在旧版单图迁移场景（[migratedId]）下才默认激活；
+  /// - 其余情况返回 null（保持停用，绝不回退第一张）。
+  @visibleForTesting
+  static String? resolveActiveId(
+    List<String> itemIds,
+    String? activeId, {
+    String? migratedId,
+  }) {
+    if (activeId != null && itemIds.contains(activeId)) return activeId;
+    if (migratedId != null && itemIds.contains(migratedId)) return migratedId;
+    return null;
   }
 
   Future<void> _persist() async {
@@ -159,6 +186,9 @@ class CustomBackgroundsNotifier
       );
       if (state.activeId != null) {
         await prefs.setString(ThemeConfig.customBgActiveKey, state.activeId!);
+      } else {
+        // 无激活项时清理旧 key，避免残留导致下次启动误判
+        await prefs.remove(ThemeConfig.customBgActiveKey);
       }
     } catch (_) {}
   }
@@ -220,8 +250,7 @@ class CustomBackgroundsNotifier
     final v = opacity.clamp(0.2, 1.0);
     state = CustomBackgroundsState(
       items: [
-        for (final e in state.items)
-          e.id == id ? e.copyWith(opacity: v) : e,
+        for (final e in state.items) e.id == id ? e.copyWith(opacity: v) : e,
       ],
       activeId: state.activeId,
     );
@@ -238,7 +267,8 @@ class CustomBackgroundsNotifier
     } catch (_) {
       return;
     }
-    state = CustomBackgroundsState(items: state.items, activeId: state.activeId);
+    state =
+        CustomBackgroundsState(items: state.items, activeId: state.activeId);
     await _persist();
   }
 
