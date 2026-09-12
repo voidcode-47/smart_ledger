@@ -30,7 +30,7 @@ class BudgetCard extends ConsumerWidget {
           ),
         ),
         error: (e, _) => Text('预算读取失败：$e',
-            style: const TextStyle(fontSize: 12, color: AppTheme.expenseColor)),
+            style: TextStyle(fontSize: 12, color: AppTheme.expenseColor)),
         data: (budget) {
           if (budget == null) {
             return _empty(context, ref, month);
@@ -76,7 +76,7 @@ class BudgetCard extends ConsumerWidget {
                     child: Text(' / ${FormatUtils.money(budget)}',
                         style: TextStyle(
                             fontSize: 13,
-                            color: Colors.black.withValues(alpha: 0.60))),
+                            color: AppTheme.onSurface(alpha: 0.60))),
                   ),
                   const Spacer(),
                   Padding(
@@ -102,7 +102,7 @@ class BudgetCard extends ConsumerWidget {
                 child: LinearProgressIndicator(
                   value: ratio,
                   minHeight: 8,
-                  backgroundColor: Colors.black.withValues(alpha: 0.12),
+                  backgroundColor: AppTheme.onSurface(alpha: 0.12),
                   valueColor: AlwaysStoppedAnimation(progressColor),
                 ),
               ),
@@ -111,7 +111,7 @@ class BudgetCard extends ConsumerWidget {
                 '已支出 ${(ratio * 100).toStringAsFixed(0)}%',
                 style: TextStyle(
                     fontSize: 11,
-                    color: Colors.black.withValues(alpha: 0.50)),
+                    color: AppTheme.onSurface(alpha: 0.50)),
               ),
             ],
           );
@@ -129,7 +129,7 @@ class BudgetCard extends ConsumerWidget {
         child: Row(
           children: [
             Icon(Icons.savings_outlined,
-                size: 26, color: Colors.black.withValues(alpha: 0.70)),
+                size: 26, color: AppTheme.onSurface(alpha: 0.70)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -142,13 +142,13 @@ class BudgetCard extends ConsumerWidget {
                     '点击为 ${FormatUtils.monthTitle(month)} 设置预算，随时掌握超支情况',
                     style: TextStyle(
                         fontSize: 12,
-                        color: Colors.black.withValues(alpha: 0.55)),
+                        color: AppTheme.onSurface(alpha: 0.55)),
                   ),
                 ],
               ),
             ),
             Icon(Icons.add_circle_outline_rounded,
-                color: Colors.black.withValues(alpha: 0.60)),
+                color: AppTheme.onSurface(alpha: 0.60)),
           ],
         ),
       ),
@@ -162,7 +162,7 @@ class BudgetCard extends ConsumerWidget {
     final saved = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.cardColor,
         title: const Text('设置月度预算'),
         content: TextField(
           controller: ctrl,

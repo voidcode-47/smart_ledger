@@ -111,7 +111,7 @@ class TransactionTile extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.black.withValues(alpha: 0.55),
+                        color: AppTheme.onSurface(alpha: 0.55),
                       ),
                     ),
                 ],
@@ -134,7 +134,7 @@ class TransactionTile extends ConsumerWidget {
                   FormatUtils.fullDate(entry.date),
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.black.withValues(alpha: 0.45),
+                    color: AppTheme.onSurface(alpha: 0.45),
                   ),
                 ),
               ],
@@ -155,7 +155,7 @@ class TransactionTile extends ConsumerWidget {
                     color: AppTheme.expenseColor.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.delete_outline_rounded,
+                  child: Icon(Icons.delete_outline_rounded,
                       size: 17, color: AppTheme.expenseColor),
                 ),
               ),

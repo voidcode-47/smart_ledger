@@ -35,7 +35,7 @@ class MonthlySummaryCard extends ConsumerWidget {
                 FormatUtils.monthTitle(month),
                 style: TextStyle(
                     fontSize: 12,
-                    color: Colors.black.withValues(alpha: 0.45)),
+                    color: AppTheme.onSurface(alpha: 0.45)),
               ),
             ],
           ),

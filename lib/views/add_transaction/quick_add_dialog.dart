@@ -121,7 +121,7 @@ class _QuickAddDialogState extends ConsumerState<QuickAddDialog> {
         height: 36,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accent : Colors.black.withValues(alpha: 0.06),
+          color: selected ? AppTheme.accent : AppTheme.onSurface(alpha: 0.06),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

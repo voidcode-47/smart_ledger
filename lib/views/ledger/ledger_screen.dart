@@ -76,7 +76,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
             padding: const EdgeInsets.symmetric(vertical: 32),
             child: Center(
                 child: Text('流水加载失败：$e',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 13, color: AppTheme.textSecondary))),
           ),
           data: (all) {
@@ -99,21 +99,21 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
     return TextField(
       controller: _searchCtrl,
       onChanged: (_) => setState(() {}),
-      style: const TextStyle(color: AppTheme.textPrimary),
+      style: TextStyle(color: AppTheme.textPrimary),
       decoration: InputDecoration(
         hintText: '搜索备注或分类…',
-        hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.40)),
+        hintStyle: TextStyle(color: AppTheme.onSurface(alpha: 0.40)),
         prefixIcon: Icon(Icons.search_rounded,
-            color: Colors.black.withValues(alpha: 0.60)),
+            color: AppTheme.onSurface(alpha: 0.60)),
         suffixIcon: _searchCtrl.text.isEmpty
             ? null
             : IconButton(
                 icon: Icon(Icons.clear_rounded,
-                    color: Colors.black.withValues(alpha: 0.60)),
+                    color: AppTheme.onSurface(alpha: 0.60)),
                 onPressed: () => setState(() => _searchCtrl.clear()),
               ),
         filled: true,
-        fillColor: Colors.black.withValues(alpha: 0.08),
+        fillColor: AppTheme.onSurface(alpha: 0.08),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -130,7 +130,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
         label: Text(label),
         selected: selected,
         selectedColor: AppTheme.accent,
-        backgroundColor: Colors.black.withValues(alpha: 0.10),
+        backgroundColor: AppTheme.onSurface(alpha: 0.10),
         labelStyle: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -169,17 +169,17 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.10),
+        color: AppTheme.onSurface(alpha: 0.10),
         borderRadius: BorderRadius.circular(10),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String?>(
           value: _categoryFilter,
           isExpanded: true,
-          dropdownColor: Colors.white,
-          style: const TextStyle(fontSize: 12, color: AppTheme.textPrimary),
+          dropdownColor: AppTheme.cardColor,
+          style: TextStyle(fontSize: 12, color: AppTheme.textPrimary),
           icon: Icon(Icons.expand_more_rounded,
-              size: 18, color: Colors.black.withValues(alpha: 0.70)),
+              size: 18, color: AppTheme.onSurface(alpha: 0.70)),
           items: items,
           onChanged: (v) => setState(() => _categoryFilter = v),
         ),
@@ -241,13 +241,13 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
               Text('${entries.length} 笔',
                   style: TextStyle(
                       fontSize: 11,
-                      color: Colors.black.withValues(alpha: 0.45))),
+                      color: AppTheme.onSurface(alpha: 0.45))),
               const Spacer(),
               if (expense > 0)
                 Text('支出 ${FormatUtils.money(expense)}',
                     style: TextStyle(
                         fontSize: 12,
-                        color: Colors.black.withValues(alpha: 0.60))),
+                        color: AppTheme.onSurface(alpha: 0.60))),
             ],
           ),
         ),
@@ -257,7 +257,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
               for (var i = 0; i < entries.length; i++) ...[
                 if (i > 0)
                   Divider(
-                      height: 1, color: Colors.black.withValues(alpha: 0.06)),
+                      height: 1, color: AppTheme.onSurface(alpha: 0.06)),
                 TransactionTile(
                   entry: entries[i],
                   onEdit: entries[i].id == null

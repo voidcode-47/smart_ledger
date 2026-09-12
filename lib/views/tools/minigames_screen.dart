@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/app_theme.dart';
 import '../../utils/minigame_catalog.dart';
 import 'game_webview_screen.dart';
 
@@ -70,7 +71,7 @@ class MiniGamesScreen extends StatelessWidget {
                   height: 46,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: AppTheme.onSurface(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(game.icon, style: const TextStyle(fontSize: 24)),

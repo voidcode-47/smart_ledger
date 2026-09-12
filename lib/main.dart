@@ -8,6 +8,7 @@ import 'package:window_manager/window_manager.dart';
 import 'services/crash_reporter.dart';
 import 'services/database_service.dart';
 import 'utils/app_theme.dart';
+import 'viewmodels/theme_providers.dart';
 import 'views/home_screen.dart';
 import 'views/lock/lock_screen.dart';
 
@@ -51,18 +52,23 @@ Future<void> main() async {
   ));
 }
 
-class SmartLedgerApp extends StatelessWidget {
+class SmartLedgerApp extends ConsumerWidget {
   const SmartLedgerApp({super.key, this.crashLog});
 
   /// 上次运行遗留的崩溃日志（无记录为 null）
   final String? crashLog;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 黑色背景主题 → 全局深色模式（卡片/文字/输入框等整体适配）
+    final isDark = ref.watch(backgroundThemeProvider).isDark;
+    AppTheme.setDark(isDark);
     return MaterialApp(
       title: '智慧记账',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme(),
+      darkTheme: AppTheme.darkTheme(),
+      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
       home: _CrashGate(
         crashLog: crashLog,
         child: Platform.isAndroid
@@ -100,7 +106,7 @@ class _CrashGateState extends State<_CrashGate> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.cardColor,
         title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded,

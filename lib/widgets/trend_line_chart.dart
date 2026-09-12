@@ -21,7 +21,7 @@ class TrendLineChart extends StatelessWidget {
         child: Center(
           child: Text(
             '暂无数据',
-            style: TextStyle(color: Colors.black.withValues(alpha: 0.50)),
+            style: TextStyle(color: AppTheme.onSurface(alpha: 0.50)),
           ),
         ),
       );
@@ -40,7 +40,7 @@ class TrendLineChart extends StatelessWidget {
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (v) => FlLine(
-              color: Colors.black.withValues(alpha: 0.10),
+              color: AppTheme.onSurface(alpha: 0.10),
               strokeWidth: 1,
             ),
           ),
@@ -68,7 +68,7 @@ class TrendLineChart extends StatelessWidget {
                       FormatUtils.dayLabel(points[i].day),
                       style: TextStyle(
                         fontSize: 10,
-                        color: Colors.black.withValues(alpha: 0.60),
+                        color: AppTheme.onSurface(alpha: 0.60),
                       ),
                     ),
                   );

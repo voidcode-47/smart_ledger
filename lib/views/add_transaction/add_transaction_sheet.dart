@@ -127,7 +127,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     // 选择来源：拍照 / 相册
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.cardColor,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => SafeArea(
@@ -281,13 +281,13 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: AppTheme.gradient,
         ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         child: Padding(
@@ -338,12 +338,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             tooltip: '图片识别记账',
             onPressed: _pickImageAndRecognize,
             icon: Icon(Icons.document_scanner_outlined,
-                color: Colors.black.withValues(alpha: 0.85)),
+                color: AppTheme.onSurface(alpha: 0.85)),
           ),
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: Icon(Icons.close_rounded,
-              color: Colors.black.withValues(alpha: 0.80)),
+              color: AppTheme.onSurface(alpha: 0.80)),
         ),
       ],
     );
@@ -374,7 +374,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           height: 40,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected ? AppTheme.accent : Colors.black.withValues(alpha: 0.06),
+            color: selected ? AppTheme.accent : AppTheme.onSurface(alpha: 0.06),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Text(
@@ -395,9 +395,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.08),
+        color: AppTheme.onSurface(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.20)),
+        border: Border.all(color: AppTheme.onSurface(alpha: 0.20)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -406,7 +406,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black.withValues(alpha: 0.60))),
+                  color: AppTheme.onSurface(alpha: 0.60))),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -417,7 +417,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
                 color: empty
-                    ? Colors.black.withValues(alpha: 0.35)
+                    ? AppTheme.onSurface(alpha: 0.35)
                     : AppTheme.textPrimary,
               ),
             ),
@@ -435,7 +435,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.08),
+          color: AppTheme.onSurface(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -445,7 +445,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             Text(FormatUtils.fullDate(_date)),
             const Spacer(),
             Icon(Icons.chevron_right_rounded,
-                size: 20, color: Colors.black.withValues(alpha: 0.50)),
+                size: 20, color: AppTheme.onSurface(alpha: 0.50)),
           ],
         ),
       ),
@@ -472,12 +472,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.05),
+        color: AppTheme.onSurface(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          const Icon(Icons.group_rounded,
+          Icon(Icons.group_rounded,
               size: 18, color: AppTheme.textSecondary),
           const SizedBox(width: 8),
           const Text('AA 拼单',
@@ -541,14 +541,14 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       error: (e, _) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Text('分类加载失败：$e',
-            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
       ),
       data: (categories) {
         if (categories.isEmpty) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Text('暂无$_type分类，请到「数据 → 分类管理」添加',
-                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
           );
         }
         // 编辑模式下若无当前分类名，则默认选中第一个
@@ -584,10 +584,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.30)
-              : Colors.black.withValues(alpha: 0.08),
+              : AppTheme.onSurface(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? color : Colors.black.withValues(alpha: 0.15),
+            color: isSelected ? color : AppTheme.onSurface(alpha: 0.15),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -598,7 +598,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             Text(
               c.name.length > 4 ? '${c.name.substring(0, 4)}…' : c.name,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: AppTheme.textPrimary),
+              style: TextStyle(fontSize: 12, color: AppTheme.textPrimary),
             ),
           ],
         ),

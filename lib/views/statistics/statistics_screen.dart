@@ -74,7 +74,7 @@ class StatisticsScreen extends ConsumerWidget {
                   child: Center(
                     child: Text('该筛选范围内暂无支出',
                         style: TextStyle(
-                            color: Colors.black.withValues(alpha: 0.50))),
+                            color: AppTheme.onSurface(alpha: 0.50))),
                   ),
                 )
               else
@@ -110,7 +110,7 @@ class StatisticsScreen extends ConsumerWidget {
       label: Text(label),
       selected: selected,
       selectedColor: AppTheme.accent,
-      backgroundColor: Colors.black.withValues(alpha: 0.10),
+      backgroundColor: AppTheme.onSurface(alpha: 0.10),
       labelStyle: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
@@ -133,7 +133,7 @@ class StatisticsScreen extends ConsumerWidget {
           label: Text(label),
           selected: selected,
           selectedColor: selectedColor ?? AppTheme.accent,
-          backgroundColor: Colors.black.withValues(alpha: 0.06),
+          backgroundColor: AppTheme.onSurface(alpha: 0.06),
           labelStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,

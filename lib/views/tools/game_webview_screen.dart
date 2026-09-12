@@ -41,7 +41,8 @@ true;
       ..setBackgroundColor(Colors.black)
       ..setNavigationDelegate(NavigationDelegate(
         onPageFinished: (url) {
-          _controller.runJavaScript(_injectScript);
+          // 页面加载完成后注入按键转发器；注入失败不影响游戏运行
+          _controller.runJavaScript(_injectScript).catchError((_) {});
         },
         onWebResourceError: (err) {
           if (mounted && widget.game.needsNetwork && !_loadFailed) {
@@ -55,10 +56,14 @@ true;
         },
       ));
     final game = widget.game;
-    if (game.assetIndex != null) {
-      _controller.loadFlutterAsset(game.assetIndex!);
-    } else if (game.onlineUrl != null) {
-      _controller.loadRequest(Uri.parse(game.onlineUrl!));
+    try {
+      if (game.assetIndex != null) {
+        _controller.loadFlutterAsset(game.assetIndex!);
+      } else if (game.onlineUrl != null) {
+        _controller.loadRequest(Uri.parse(game.onlineUrl!));
+      }
+    } catch (_) {
+      // 加载失败时由错误回调提示，不向上抛未处理异常
     }
   }
 
@@ -74,11 +79,13 @@ true;
   Future<void> _reload() async {
     setState(() => _loadFailed = false);
     final game = widget.game;
-    if (game.assetIndex != null) {
-      await _controller.loadFlutterAsset(game.assetIndex!);
-    } else if (game.onlineUrl != null) {
-      await _controller.loadRequest(Uri.parse(game.onlineUrl!));
-    }
+    try {
+      if (game.assetIndex != null) {
+        await _controller.loadFlutterAsset(game.assetIndex!);
+      } else if (game.onlineUrl != null) {
+        await _controller.loadRequest(Uri.parse(game.onlineUrl!));
+      }
+    } catch (_) {}
   }
 
   @override

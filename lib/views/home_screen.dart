@@ -133,7 +133,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final text = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.cardColor,
         title: const Text('一句话记账'),
         content: TextField(
           controller: ctrl,
@@ -236,7 +236,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _textAddFab(String heroTag) {
     return FloatingActionButton.small(
       heroTag: heroTag,
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.cardColor,
       foregroundColor: AppTheme.accent,
       tooltip: '一句话记账（如：午饭 32）',
       onPressed: _openTextAdd,
@@ -253,16 +253,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           onDestinationSelected: (i) => setState(() => _index = i),
           labelType: NavigationRailLabelType.all,
           groupAlignment: -0.85,
-          backgroundColor: Colors.white.withValues(alpha: 0.55),
+          backgroundColor: AppTheme.cardColor.withValues(alpha: 0.55),
           selectedIconTheme: const IconThemeData(color: AppTheme.accent),
           selectedLabelTextStyle: const TextStyle(
             color: AppTheme.accent,
             fontWeight: FontWeight.w700,
           ),
           unselectedIconTheme:
-              IconThemeData(color: Colors.black.withValues(alpha: 0.55)),
+              IconThemeData(color: AppTheme.onSurface(alpha: 0.55)),
           unselectedLabelTextStyle:
-              TextStyle(color: Colors.black.withValues(alpha: 0.55)),
+              TextStyle(color: AppTheme.onSurface(alpha: 0.55)),
           indicatorColor: AppTheme.accentBg,
           destinations: const [
             NavigationRailDestination(
@@ -287,7 +287,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ],
         ),
-        const VerticalDivider(
+        VerticalDivider(
             width: 1, thickness: 1, color: AppTheme.dividerColor),
         Expanded(
           child: IndexedStack(index: _index, children: _pages),
@@ -317,7 +317,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     size: 22,
                     color: selected
                         ? AppTheme.accent
-                        : Colors.black.withValues(alpha: 0.55)),
+                        : AppTheme.onSurface(alpha: 0.55)),
                 const SizedBox(height: 2),
                 Text(
                   label,
@@ -325,7 +325,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     fontSize: 11,
                     color: selected
                         ? AppTheme.accent
-                        : Colors.black.withValues(alpha: 0.55),
+                        : AppTheme.onSurface(alpha: 0.55),
                   ),
                 ),
               ],

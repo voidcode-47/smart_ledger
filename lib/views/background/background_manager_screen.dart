@@ -76,7 +76,7 @@ class _BackgroundManagerScreenState
                 final yes = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppTheme.cardColor,
                     title: const Text('清空全部背景？'),
                     content: const Text('将删除所有已添加的背景图片，恢复主题色背景。'),
                     actions: [
@@ -121,7 +121,7 @@ class _BackgroundManagerScreenState
                       '还没有自定义背景，点下方按钮添加一张图片',
                       style: TextStyle(
                           fontSize: 13,
-                          color: Colors.black.withValues(alpha: 0.55)),
+                          color: AppTheme.onSurface(alpha: 0.55)),
                     ),
                   )
                 else
@@ -147,7 +147,7 @@ class _BackgroundManagerScreenState
                                   border: Border.all(
                                     color: isActive
                                         ? AppTheme.accent
-                                        : Colors.black.withValues(alpha: 0.08),
+                                        : AppTheme.onSurface(alpha: 0.08),
                                     width: isActive ? 2.5 : 1,
                                   ),
                                 ),
@@ -224,14 +224,14 @@ class _BackgroundManagerScreenState
                       : '调整图片不透明度（越往右越清晰）',
                   style: TextStyle(
                       fontSize: 12,
-                      color: Colors.black.withValues(alpha: 0.55)),
+                      color: AppTheme.onSurface(alpha: 0.55)),
                 ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
                     Icon(Icons.opacity_rounded,
                         size: 20,
-                        color: Colors.black.withValues(alpha: 0.50)),
+                        color: AppTheme.onSurface(alpha: 0.50)),
                     Expanded(
                       child: Slider(
                         value: state.active?.opacity ?? 0.85,
@@ -250,7 +250,7 @@ class _BackgroundManagerScreenState
                       width: 40,
                       child: Text(
                         '${((state.active?.opacity ?? 0.85) * 100).round()}%',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 13, color: AppTheme.textSecondary),
                       ),
                     ),
@@ -275,7 +275,7 @@ class _BackgroundManagerScreenState
               style: TextStyle(
                   fontSize: 12,
                   height: 1.5,
-                  color: Colors.black.withValues(alpha: 0.45)),
+                  color: AppTheme.onSurface(alpha: 0.45)),
             ),
           ),
         ],
@@ -321,7 +321,7 @@ class _BackgroundManagerScreenState
                       style: TextStyle(
                           fontSize: 12,
                           height: 1.4,
-                          color: Colors.black.withValues(alpha: 0.55)),
+                          color: AppTheme.onSurface(alpha: 0.55)),
                     ),
                   ],
                 ),

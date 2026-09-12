@@ -95,7 +95,7 @@ class LockScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.6,
-                      color: Colors.black.withValues(alpha: 0.65),
+                      color: AppTheme.onSurface(alpha: 0.65),
                     ),
                   ),
                   const SizedBox(height: 24),

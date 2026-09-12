@@ -39,7 +39,7 @@ class CategoryManagementScreen extends ConsumerWidget {
         ),
         error: (e, _) => Center(
           child: Text('分类加载失败：$e',
-              style: TextStyle(color: Colors.black.withValues(alpha: 0.70))),
+              style: TextStyle(color: AppTheme.onSurface(alpha: 0.70))),
         ),
         data: (categories) {
           final expenses =
@@ -59,7 +59,7 @@ class CategoryManagementScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 12,
                   height: 1.6,
-                  color: Colors.black.withValues(alpha: 0.50),
+                  color: AppTheme.onSurface(alpha: 0.50),
                 ),
               ),
             ],
@@ -83,7 +83,7 @@ class CategoryManagementScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Text('暂无分类',
             style: TextStyle(
-                fontSize: 13, color: Colors.black.withValues(alpha: 0.50))),
+                fontSize: 13, color: AppTheme.onSurface(alpha: 0.50))),
       );
     }
     return GlassCard(
@@ -93,7 +93,7 @@ class CategoryManagementScreen extends ConsumerWidget {
             if (i > 0)
               Divider(
                 height: 1,
-                color: Colors.black.withValues(alpha: 0.08),
+                color: AppTheme.onSurface(alpha: 0.08),
               ),
             _categoryRow(context, ref, categories[i]),
           ],
@@ -137,13 +137,13 @@ class CategoryManagementScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 1),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.10),
+                            color: AppTheme.onSurface(alpha: 0.10),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text('内置',
                               style: TextStyle(
                                   fontSize: 10,
-                                  color: Colors.black.withValues(alpha: 0.60))),
+                                  color: AppTheme.onSurface(alpha: 0.60))),
                         ),
                       ],
                     ],
@@ -153,7 +153,7 @@ class CategoryManagementScreen extends ConsumerWidget {
                     isFallback ? '兜底分类 · 不可删除' : '点击编辑',
                     style: TextStyle(
                         fontSize: 11,
-                        color: Colors.black.withValues(alpha: 0.45)),
+                        color: AppTheme.onSurface(alpha: 0.45)),
                   ),
                 ],
               ),
@@ -161,13 +161,13 @@ class CategoryManagementScreen extends ConsumerWidget {
             IconButton(
               tooltip: '编辑',
               icon: Icon(Icons.edit_outlined,
-                  size: 20, color: Colors.black.withValues(alpha: 0.80)),
+                  size: 20, color: AppTheme.onSurface(alpha: 0.80)),
               onPressed: () => _showEditDialog(context, ref, c),
             ),
             IconButton(
               tooltip: '删除',
               icon: Icon(Icons.delete_outline_rounded,
-                  size: 20, color: Colors.black.withValues(alpha: 0.70)),
+                  size: 20, color: AppTheme.onSurface(alpha: 0.70)),
               onPressed: c.isSystem || isFallback
                   ? null
                   : () => _confirmDelete(context, ref, c),
@@ -193,7 +193,7 @@ class CategoryManagementScreen extends ConsumerWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) {
           return AlertDialog(
-            backgroundColor: Colors.white,
+            backgroundColor: AppTheme.cardColor,
             title: Text(isEdit ? '编辑分类' : '添加分类'),
             content: SingleChildScrollView(
               child: Column(
@@ -241,12 +241,12 @@ class CategoryManagementScreen extends ConsumerWidget {
                               color: iconKey == entry.key
                                   ? CategoryUtils.colorOfValue(colorValue)
                                       .withValues(alpha: 0.35)
-                                  : Colors.black.withValues(alpha: 0.08),
+                                  : AppTheme.onSurface(alpha: 0.08),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: iconKey == entry.key
                                     ? CategoryUtils.colorOfValue(colorValue)
-                                    : Colors.black.withValues(alpha: 0.12),
+                                    : AppTheme.onSurface(alpha: 0.12),
                               ),
                             ),
                             child: Icon(entry.value,
@@ -329,7 +329,7 @@ class CategoryManagementScreen extends ConsumerWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color:
-                selected ? AppTheme.accent : Colors.black.withValues(alpha: 0.06),
+                selected ? AppTheme.accent : AppTheme.onSurface(alpha: 0.06),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -402,7 +402,7 @@ class CategoryManagementScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.cardColor,
         title: const Text('删除分类'),
         content: Text('确定删除“${c.name}”吗？\n该分类下的流水将自动归入“${DatabaseService.fallbackCategoryName}”。'),
         actions: [

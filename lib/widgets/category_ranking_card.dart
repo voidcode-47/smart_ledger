@@ -37,7 +37,7 @@ class CategoryRankingCard extends ConsumerWidget {
           Text(
             '按支出金额排序 · 徽标为本月对比上月变化',
             style: TextStyle(
-                fontSize: 11, color: Colors.black.withValues(alpha: 0.45)),
+                fontSize: 11, color: AppTheme.onSurface(alpha: 0.45)),
           ),
           const SizedBox(height: 12),
           for (var i = 0; i < items.length; i++) ...[
@@ -62,7 +62,7 @@ class CategoryRankingCard extends ConsumerWidget {
               style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: Colors.black.withValues(alpha: 0.50))),
+                  color: AppTheme.onSurface(alpha: 0.50))),
         ),
         Container(
           width: 10,
@@ -87,7 +87,7 @@ class CategoryRankingCard extends ConsumerWidget {
             child: LinearProgressIndicator(
               value: maxAmount <= 0 ? 0 : item.amount / maxAmount,
               minHeight: 6,
-              backgroundColor: Colors.black.withValues(alpha: 0.10),
+              backgroundColor: AppTheme.onSurface(alpha: 0.10),
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),
@@ -114,7 +114,7 @@ class CategoryRankingCard extends ConsumerWidget {
                   ? AppTheme.expenseColor
                   : isDown
                       ? const Color(0xFF4ADE80)
-                      : Colors.black.withValues(alpha: 0.40),
+                      : AppTheme.onSurface(alpha: 0.40),
             ),
           ),
         ),

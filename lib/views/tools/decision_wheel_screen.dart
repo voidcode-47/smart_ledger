@@ -20,7 +20,9 @@ class DecisionWheelScreen extends StatefulWidget {
 class _DecisionWheelScreenState extends State<DecisionWheelScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _spinAnim;
+  // 注意：不能是 final —— 每次转动都会重新绑定一段新的 Tween 动画，
+  // final 会在第二次点击时抛 LateInitializationError（转盘“只能转一次”的根因）。
+  late Animation<double> _spinAnim;
 
   List<String> _options = [];
   double _rotation = 0; // 累计旋转角度（度，顺时针）
@@ -163,7 +165,7 @@ class _DecisionWheelScreenState extends State<DecisionWheelScreen>
                         key: const ValueKey('hint'),
                         style: TextStyle(
                             fontSize: 14,
-                            color: Colors.black.withValues(alpha: 0.55)),
+                            color: AppTheme.onSurface(alpha: 0.55)),
                       )
                     : Container(
                         key: ValueKey(_result),
@@ -220,7 +222,7 @@ class _DecisionWheelScreenState extends State<DecisionWheelScreen>
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.accent,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.black.withValues(alpha: 0.15),
+                disabledBackgroundColor: AppTheme.onSurface(alpha: 0.15),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
               ),
@@ -236,7 +238,7 @@ class _DecisionWheelScreenState extends State<DecisionWheelScreen>
               style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black.withValues(alpha: 0.65))),
+                  color: AppTheme.onSurface(alpha: 0.65))),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -268,7 +270,7 @@ class _DecisionWheelScreenState extends State<DecisionWheelScreen>
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black.withValues(alpha: 0.65))),
+                      color: AppTheme.onSurface(alpha: 0.65))),
               const Spacer(),
               if (_options.length > 1)
                 TextButton.icon(
@@ -296,7 +298,7 @@ class _DecisionWheelScreenState extends State<DecisionWheelScreen>
                 child: Text('还没有选项，请在下方添加',
                     style: TextStyle(
                         fontSize: 13,
-                        color: Colors.black.withValues(alpha: 0.50))),
+                        color: AppTheme.onSurface(alpha: 0.50))),
               ),
             )
           else
@@ -324,12 +326,12 @@ class _DecisionWheelScreenState extends State<DecisionWheelScreen>
                 child: TextField(
                   controller: _addCtrl,
                   enabled: !_spinning,
-                  style: const TextStyle(color: AppTheme.textPrimary),
+                  style: TextStyle(color: AppTheme.textPrimary),
                   decoration: InputDecoration(
                     hintText: '添加选项，可用空格 / 逗号一次输入多个',
                     hintStyle: TextStyle(
                         fontSize: 12,
-                        color: Colors.black.withValues(alpha: 0.40)),
+                        color: AppTheme.onSurface(alpha: 0.40)),
                     isDense: true,
                   ),
                   onSubmitted: (_) => _addOptions(),
@@ -351,7 +353,7 @@ class _DecisionWheelScreenState extends State<DecisionWheelScreen>
             style: TextStyle(
                 fontSize: 11,
                 height: 1.5,
-                color: Colors.black.withValues(alpha: 0.40)),
+                color: AppTheme.onSurface(alpha: 0.40)),
           ),
         ],
       ),

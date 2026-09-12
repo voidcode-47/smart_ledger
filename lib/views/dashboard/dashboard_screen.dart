@@ -81,7 +81,7 @@ class DashboardScreen extends ConsumerWidget {
                       child: Text(
                         '暂无流水，点击 + 开始记账',
                         style: TextStyle(
-                            color: Colors.black.withValues(alpha: 0.50)),
+                            color: AppTheme.onSurface(alpha: 0.50)),
                       ),
                     ),
                   )
@@ -147,7 +147,7 @@ class DashboardScreen extends ConsumerWidget {
         width: 1,
         height: 36,
         margin: const EdgeInsets.symmetric(horizontal: 8),
-        color: Colors.black.withValues(alpha: 0.15),
+        color: AppTheme.onSurface(alpha: 0.15),
       );
 
   // ---------- 摘要列 ----------
@@ -158,7 +158,7 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           Text(label,
               style: TextStyle(
-                  fontSize: 12, color: Colors.black.withValues(alpha: 0.60))),
+                  fontSize: 12, color: AppTheme.onSurface(alpha: 0.60))),
           const SizedBox(height: 6),
           FittedBox(
             child: animated

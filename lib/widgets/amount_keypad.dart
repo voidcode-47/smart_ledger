@@ -48,7 +48,7 @@ class _KeyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDelete = label == 'del';
     return Material(
-      color: Colors.black.withValues(alpha: 0.06),
+      color: AppTheme.onSurface(alpha: 0.06),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -57,11 +57,11 @@ class _KeyButton extends StatelessWidget {
           height: 54,
           child: Center(
             child: isDelete
-                ? const Icon(Icons.backspace_outlined,
+                ? Icon(Icons.backspace_outlined,
                     color: AppTheme.textPrimary, size: 22)
                 : Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,

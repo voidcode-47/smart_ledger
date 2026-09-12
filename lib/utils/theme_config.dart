@@ -51,10 +51,10 @@ class ThemeConfig {
       id: 'black',
       name: '黑色',
       isDark: true,
-      gradientStart: Color(0xFF212226),
-      gradientEnd: Color(0xFF141518),
-      blob1: Color(0xFF2B2D33),
-      blob2: Color(0xFF24262B),
+      gradientStart: Color(0xFF262B33), // 深蓝灰，比纯黑柔和
+      gradientEnd: Color(0xFF171B21),
+      blob1: Color(0xFF303843),
+      blob2: Color(0xFF262C36),
     ),
   ];
 

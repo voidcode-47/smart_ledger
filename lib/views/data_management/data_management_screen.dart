@@ -297,11 +297,11 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
               ),
             ),
             error: (e, _) => Text('数据库信息读取失败：$e',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 13, color: AppTheme.expenseColor)),
             data: (info) => Row(
               children: [
-                const Icon(Icons.storage_rounded,
+                Icon(Icons.storage_rounded,
                     size: 20, color: AppTheme.textSecondary),
                 const SizedBox(width: 10),
                 Expanded(
@@ -311,7 +311,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.5,
-                      color: Colors.black.withValues(alpha: 0.75),
+                      color: AppTheme.onSurface(alpha: 0.75),
                     ),
                   ),
                 ),
@@ -355,19 +355,19 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                           '当前：${ref.watch(backgroundThemeProvider).name}',
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.black.withValues(alpha: 0.60)),
+                              color: AppTheme.onSurface(alpha: 0.60)),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
                     icon: Icon(Icons.chevron_right_rounded,
-                        color: Colors.black.withValues(alpha: 0.60)),
+                        color: AppTheme.onSurface(alpha: 0.60)),
                     onPressed: _pickBackgroundTheme,
                   ),
                 ],
               ),
-              Divider(height: 1, color: Colors.black.withValues(alpha: 0.06)),
+              Divider(height: 1, color: AppTheme.onSurface(alpha: 0.06)),
               const SizedBox(height: 8),
               // 自定义背景行
               Row(
@@ -402,7 +402,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                                     : '已添加 $cnt 张（未启用），点击管理',
                             style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.black.withValues(alpha: 0.60)),
+                                color: AppTheme.onSurface(alpha: 0.60)),
                           ),
                         ],
                       );
@@ -410,7 +410,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                   ),
                   IconButton(
                     icon: Icon(Icons.chevron_right_rounded,
-                        color: Colors.black.withValues(alpha: 0.60)),
+                        color: AppTheme.onSurface(alpha: 0.60)),
                     onPressed: _openBackgroundManager,
                   ),
                 ],
@@ -429,10 +429,10 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.10),
+                  color: AppTheme.onSurface(alpha: 0.10),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.category_rounded,
+                child: Icon(Icons.category_rounded,
                     color: AppTheme.textPrimary),
               ),
               const SizedBox(width: 12),
@@ -447,14 +447,14 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                       '新增 / 删除 / 修改自定义分类，调整图标与颜色',
                       style: TextStyle(
                           fontSize: 12,
-                          color: Colors.black.withValues(alpha: 0.60)),
+                          color: AppTheme.onSurface(alpha: 0.60)),
                     ),
                   ],
                 ),
               ),
               IconButton(
                 icon: Icon(Icons.chevron_right_rounded,
-                    color: Colors.black.withValues(alpha: 0.60)),
+                    color: AppTheme.onSurface(alpha: 0.60)),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const CategoryManagementScreen(),
@@ -489,7 +489,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
               ),
               if (Platform.isAndroid) ...[
                 Divider(
-                    height: 1, color: Colors.black.withValues(alpha: 0.06)),
+                    height: 1, color: AppTheme.onSurface(alpha: 0.06)),
                 const SizedBox(height: 8),
                 _toolRow(
                   icon: Icons.sports_esports_outlined,
@@ -519,7 +519,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                 style: TextStyle(
                     fontSize: 13,
                     height: 1.5,
-                    color: Colors.black.withValues(alpha: 0.65)),
+                    color: AppTheme.onSurface(alpha: 0.65)),
               ),
               const SizedBox(height: 16),
               Row(
@@ -566,7 +566,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                         style: TextStyle(
                             fontSize: 12,
                             height: 1.5,
-                            color: Colors.black.withValues(alpha: 0.60)),
+                            color: AppTheme.onSurface(alpha: 0.60)),
                       ),
                     ],
                   ),
@@ -596,7 +596,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                 style: TextStyle(
                     fontSize: 13,
                     height: 1.5,
-                    color: Colors.black.withValues(alpha: 0.65)),
+                    color: AppTheme.onSurface(alpha: 0.65)),
               ),
               const SizedBox(height: 16),
               _actionButton(
@@ -621,7 +621,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                 style: TextStyle(
                     fontSize: 13,
                     height: 1.5,
-                    color: Colors.black.withValues(alpha: 0.65)),
+                    color: AppTheme.onSurface(alpha: 0.65)),
               ),
               const SizedBox(height: 16),
               _actionButton(
@@ -672,13 +672,13 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                     subtitle,
                     style: TextStyle(
                         fontSize: 12,
-                        color: Colors.black.withValues(alpha: 0.60)),
+                        color: AppTheme.onSurface(alpha: 0.60)),
                   ),
                 ],
               ),
             ),
             Icon(Icons.chevron_right_rounded,
-                color: Colors.black.withValues(alpha: 0.60)),
+                color: AppTheme.onSurface(alpha: 0.60)),
           ],
         ),
       ),
@@ -696,7 +696,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
         style: FilledButton.styleFrom(
           backgroundColor: AppTheme.accent,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: Colors.black.withValues(alpha: 0.40),
+          disabledBackgroundColor: AppTheme.onSurface(alpha: 0.40),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),

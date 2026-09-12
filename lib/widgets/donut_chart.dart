@@ -40,7 +40,7 @@ class CategoryDonutCard extends ConsumerWidget {
               child: Center(
                 child: Text(
                   '本月暂无支出数据',
-                  style: TextStyle(color: Colors.black.withValues(alpha: 0.50)),
+                  style: TextStyle(color: AppTheme.onSurface(alpha: 0.50)),
                 ),
               ),
             )
@@ -76,7 +76,7 @@ class CategoryDonutCard extends ConsumerWidget {
                               '总支出',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.black.withValues(alpha: 0.60),
+                                color: AppTheme.onSurface(alpha: 0.60),
                               ),
                             ),
                             Text(
@@ -116,7 +116,7 @@ class CategoryDonutCard extends ConsumerWidget {
                                 '${s.percent.toStringAsFixed(1)}%',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.black.withValues(alpha: 0.70),
+                                  color: AppTheme.onSurface(alpha: 0.70),
                                 ),
                               ),
                             ],

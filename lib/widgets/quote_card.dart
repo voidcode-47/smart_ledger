@@ -102,7 +102,7 @@ class _QuoteCardState extends State<QuoteCard> {
                       '—— ${_quote.source}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.black.withValues(alpha: 0.50),
+                        color: AppTheme.onSurface(alpha: 0.50),
                       ),
                     ),
                   ],
@@ -118,13 +118,13 @@ class _QuoteCardState extends State<QuoteCard> {
                         height: 16,
                         child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.black.withValues(alpha: 0.45)),
+                            color: AppTheme.onSurface(alpha: 0.45)),
                       )
                     : Icon(Icons.refresh_rounded,
-                        size: 18, color: Colors.black.withValues(alpha: 0.55)),
+                        size: 18, color: AppTheme.onSurface(alpha: 0.55)),
               ),
               Icon(Icons.copy_rounded,
-                  size: 15, color: Colors.black.withValues(alpha: 0.35)),
+                  size: 15, color: AppTheme.onSurface(alpha: 0.35)),
             ],
           ),
         ),
