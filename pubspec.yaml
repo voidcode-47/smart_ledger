@@ -1,7 +1,7 @@
 name: smart_ledger
 description: "智慧记账 — 跨端个人财务管理助手（Android / Windows）"
 publish_to: 'none'
-version: 1.6.0+12
+version: 1.6.1+13
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -88,6 +88,40 @@ flutter:
     - assets/minigames/breakout/styles.css
     - assets/minigames/breakout/utils/utilsColor.js
     - assets/minigames/breakout/utils/utilsCopyright.js
+    - assets/minigames/hangman/audios/correct.mp3
+    - assets/minigames/hangman/audios/hang.mp3
+    - assets/minigames/hangman/audios/lose.mp3
+    - assets/minigames/hangman/audios/pullup.mp3
+    - assets/minigames/hangman/audios/rotate.mp3
+    - assets/minigames/hangman/audios/win.mp3
+    - assets/minigames/hangman/audios/wrong.mp3
+    - assets/minigames/hangman/css/main.css
+    - assets/minigames/hangman/images/city.png
+    - assets/minigames/hangman/images/gallows.png
+    - assets/minigames/hangman/images/icons/audio-off.png
+    - assets/minigames/hangman/images/icons/audio-on.png
+    - assets/minigames/hangman/images/icons/cursor.png
+    - assets/minigames/hangman/images/icons/home.png
+    - assets/minigames/hangman/images/icons/menu-button.png
+    - assets/minigames/hangman/images/icons/refresh.png
+    - assets/minigames/hangman/images/icons/reload.png
+    - assets/minigames/hangman/images/icons/star.png
+    - assets/minigames/hangman/images/icons/trophy.png
+    - assets/minigames/hangman/images/left.png
+    - assets/minigames/hangman/images/middle.png
+    - assets/minigames/hangman/images/mountains.png
+    - assets/minigames/hangman/images/right.png
+    - assets/minigames/hangman/images/roller.png
+    - assets/minigames/hangman/images/sky.png
+    - assets/minigames/hangman/images/victim.png
+    - assets/minigames/hangman/index.html
+    - assets/minigames/hangman/LICENSE
+    - assets/minigames/hangman/scripts/loader.js
+    - assets/minigames/hangman/scripts/main.js
+    - assets/minigames/hangman/scripts/rope.js
+    - assets/minigames/hangman/vendor/gsap.min.js
+    - assets/minigames/hangman/vendor/parallax.min.js
+    - assets/minigames/hangman/vendor/preloadjs.min.js
     - assets/minigames/memory/css/MemoryGame.css
     - assets/minigames/memory/images/card.svg
     - assets/minigames/memory/images/fruits/apple.jpg
@@ -116,7 +150,20 @@ flutter:
     - assets/minigames/minesweeper/images/git.jpg
     - assets/minigames/minesweeper/images/mine.png
     - assets/minigames/minesweeper/index.html
+    - assets/minigames/minesweeper/js/jquery.min.js
     - assets/minigames/minesweeper/js/minesweeper.js
+    - assets/minigames/pong/game.js
+    - assets/minigames/pong/images/press1.png
+    - assets/minigames/pong/images/press2.png
+    - assets/minigames/pong/images/winner.png
+    - assets/minigames/pong/index.html
+    - assets/minigames/pong/LICENSE
+    - assets/minigames/pong/pong.css
+    - assets/minigames/pong/pong.js
+    - assets/minigames/pong/sounds/goal.wav
+    - assets/minigames/pong/sounds/ping.wav
+    - assets/minigames/pong/sounds/pong.wav
+    - assets/minigames/pong/sounds/wall.wav
     - assets/minigames/snake/src/css/black-snake.css
     - assets/minigames/snake/src/css/blue-snake.css
     - assets/minigames/snake/src/css/clean-snake.css
@@ -150,8 +197,16 @@ flutter:
     - assets/minigames/snake/src/js/init.js
     - assets/minigames/snake/src/js/snake.js
     - assets/minigames/sudoku/app.js
+    - assets/minigames/sudoku/confetti.browser.min.js
     - assets/minigames/sudoku/index.html
     - assets/minigames/sudoku/style.css
     - assets/minigames/tetris/index.html
     - assets/minigames/tetris/stats.js
+    - assets/minigames/tetris/texture.jpg
+    - assets/minigames/tictactoe/bootstrap-icons.min.css
+    - assets/minigames/tictactoe/fonts/bootstrap-icons.woff2
+    - assets/minigames/tictactoe/index.html
+    - assets/minigames/tictactoe/LICENSE
+    - assets/minigames/tictactoe/script.js
+    - assets/minigames/tictactoe/styles.css
     - assets/minigames/tetris/texture.jpg

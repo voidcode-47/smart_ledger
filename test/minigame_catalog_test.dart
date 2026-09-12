@@ -101,10 +101,26 @@ void main() {
       expect(keys.any((k) => k.keyCode == 80), isTrue, reason: '需要 P 暂停');
     });
 
+    test('上下键布局（Pong）含上下与单人/双人', () {
+      final keys = const MiniGame(
+        id: 'x',
+        title: 'x',
+        subtitle: '',
+        icon: '',
+        license: '',
+        source: '',
+        input: MiniGameInput.upDown,
+      ).virtualKeys;
+      final codes = keys.map((k) => k.code).toSet();
+      expect(codes, containsAll(['KeyQ', 'KeyA']));
+      expect(keys.any((k) => k.keyCode == 49), isTrue, reason: '需要单人(1)');
+      expect(keys.any((k) => k.keyCode == 50), isTrue, reason: '需要双人(2)');
+    });
+
     test('键码均在合法区间', () {
       for (final g in MiniGame.all) {
         for (final k in g.virtualKeys) {
-          expect(k.keyCode, inInclusiveRange(32, 80),
+          expect(k.keyCode, inInclusiveRange(32, 90),
               reason: '${g.id} 按键 ${k.label} 码值异常');
           expect(k.label, isNotEmpty);
           expect(k.key, isNotEmpty);

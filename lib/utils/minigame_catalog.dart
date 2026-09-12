@@ -11,16 +11,27 @@ class MiniGameKey {
   final String key;
   final String code;
   final int keyCode;
-  const MiniGameKey(this.label, this.key, this.code, this.keyCode);
+
+  /// 是否为方向/动作键（布局时与开始/暂停等功能键分行）
+  final bool direction;
+  const MiniGameKey(this.label, this.key, this.code, this.keyCode,
+      {this.direction = true});
 
   static const up = MiniGameKey('上', 'ArrowUp', 'ArrowUp', 38);
   static const down = MiniGameKey('下', 'ArrowDown', 'ArrowDown', 40);
   static const left = MiniGameKey('左', 'ArrowLeft', 'ArrowLeft', 37);
   static const right = MiniGameKey('右', 'ArrowRight', 'ArrowRight', 39);
   static const rotate = MiniGameKey('转', 'ArrowUp', 'ArrowUp', 38);
-  static const start = MiniGameKey('开始', ' ', 'Space', 32);
-  static const pause = MiniGameKey('暂停', ' ', 'Space', 32);
-  static const pauseP = MiniGameKey('暂停', 'p', 'KeyP', 80);
+  static const start =
+      MiniGameKey('开始', ' ', 'Space', 32, direction: false);
+  static const pause = MiniGameKey('暂停', ' ', 'Space', 32, direction: false);
+  static const pauseP = MiniGameKey('暂停', 'p', 'KeyP', 80, direction: false);
+
+  // Pong：Q/A 控制左挡板上下，1/2 选择模式
+  static const upQ = MiniGameKey('上', 'q', 'KeyQ', 81);
+  static const downA = MiniGameKey('下', 'a', 'KeyA', 65);
+  static const solo = MiniGameKey('单人', '1', 'Digit1', 49, direction: false);
+  static const duo = MiniGameKey('双人', '2', 'Digit2', 50, direction: false);
 }
 
 /// 游戏需要的输入方式
@@ -36,6 +47,9 @@ enum MiniGameInput {
 
   /// 左右键（打砖块等）
   leftRight,
+
+  /// 上下键 + 单人/双人模式（Pong 等）
+  upDown,
 }
 
 class MiniGame {
@@ -85,6 +99,12 @@ class MiniGame {
             MiniGameKey.left,
             MiniGameKey.right,
             MiniGameKey.pauseP,
+          ],
+        MiniGameInput.upDown => const [
+            MiniGameKey.upQ,
+            MiniGameKey.downA,
+            MiniGameKey.solo,
+            MiniGameKey.duo,
           ],
       };
 
@@ -159,6 +179,36 @@ class MiniGame {
       source: 'https://github.com/vincenzo-afk/sudokuflow',
       input: MiniGameInput.none,
       assetIndex: 'assets/minigames/sudoku/index.html',
+    ),
+    MiniGame(
+      id: 'tictactoe',
+      title: '井字棋',
+      subtitle: '三子连线 · 与电脑对战',
+      icon: '⭕',
+      license: 'MIT · ramazancetinkaya/tictactoe',
+      source: 'https://github.com/ramazancetinkaya/tictactoe',
+      input: MiniGameInput.none,
+      assetIndex: 'assets/minigames/tictactoe/index.html',
+    ),
+    MiniGame(
+      id: 'hangman',
+      title: '刽子手',
+      subtitle: '猜英文单词 · 点字母，别让小人上吊',
+      icon: '🎯',
+      license: 'MIT · abdoutech19/hangman-game',
+      source: 'https://github.com/abdoutech19/hangman-game',
+      input: MiniGameInput.none,
+      assetIndex: 'assets/minigames/hangman/index.html',
+    ),
+    MiniGame(
+      id: 'pong',
+      title: 'Pong 弹球',
+      subtitle: '双人对打 / 对战电脑 · Q/A 上下',
+      icon: '🏓',
+      license: 'MIT · jakesgordon/javascript-pong',
+      source: 'https://github.com/jakesgordon/javascript-pong',
+      input: MiniGameInput.upDown,
+      assetIndex: 'assets/minigames/pong/index.html',
     ),
   ];
 

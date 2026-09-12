@@ -147,14 +147,9 @@ true;
   }
 
   Widget _buildKeypad(List<MiniGameKey> keys) {
-    // 按游戏布局分两行：方向类（左/右 + 上/下/旋转）与功能键（开始/暂停）
-    final dirKeys = keys
-        .where((k) =>
-            k.keyCode >= 37 && k.keyCode <= 40 && k.label != '转')
-        .toList();
-    final funcKeys = keys
-        .where((k) => k.keyCode < 37 || k.keyCode > 40 || k.label == '转')
-        .toList();
+    // 方向/动作键一行（上/下/左/右/转），开始/暂停/模式等功能键一行
+    final dirKeys = keys.where((k) => k.direction).toList();
+    final funcKeys = keys.where((k) => !k.direction).toList();
 
     Widget row(List<MiniGameKey> items) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 5),

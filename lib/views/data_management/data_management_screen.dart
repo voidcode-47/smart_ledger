@@ -494,7 +494,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                 _toolRow(
                   icon: Icons.sports_esports_outlined,
                   title: '小游戏合集',
-                  subtitle: '2048 / 俄罗斯方块 / 贪吃蛇 / 扫雷等 8 款免费游戏',
+                  subtitle: '2048 / 俄罗斯方块 / 贪吃蛇 / 扫雷等 10 款免费游戏',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const MiniGamesScreen()),
                   ),
