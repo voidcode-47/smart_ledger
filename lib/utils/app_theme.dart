@@ -52,6 +52,39 @@ class AppTheme {
       _dark ? const Color(0xFF272B33) : const Color(0xFFFFFFFF);
   static Color get dividerColor =>
       _dark ? const Color(0xFF353B45) : const Color(0xFFEDEDE8);
+
+  // ---------- 玻璃拟态（Glassmorphism：模糊 + 半透明 + 高光描边 + 柔影） ----------
+  /// 玻璃填充下沿（略透明，透出背景渐变）
+  static Color get glassFill =>
+      _dark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.55);
+
+  /// 玻璃填充上沿（更亮，模拟顶部光源）
+  static Color get glassFillStrong =>
+      _dark ? Colors.white.withValues(alpha: 0.11) : Colors.white.withValues(alpha: 0.78);
+
+  /// 玻璃高光描边
+  static Color get glassBorder =>
+      _dark ? Colors.white.withValues(alpha: 0.10) : Colors.white.withValues(alpha: 0.85);
+
+  /// 背景模糊强度
+  static const double glassBlurSigma = 16;
+
+  /// 玻璃卡片柔影（浅色下带一丝主色，深色下用黑色托底）
+  static List<BoxShadow> get glassShadow => _dark
+      ? const [
+          BoxShadow(
+              color: Color(0x66000000), blurRadius: 24, offset: Offset(0, 10)),
+        ]
+      : const [
+          BoxShadow(
+              color: Color(0x140F766E), blurRadius: 22, offset: Offset(0, 8)),
+        ];
+
+  /// 主色渐变（Hero 卡片、主按钮、主 FAB）
+  static const List<Color> accentGradient = [Color(0xFF2BB7A8), Color(0xFF0F766E)];
+
+  /// 主色渐变对应的发光阴影色
+  static const Color accentGlow = Color(0x4D0F766E);
   static Color get fieldBg =>
       _dark ? const Color(0xFF2E333D) : const Color(0xFFF2F1EC);
 

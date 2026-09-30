@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -42,19 +44,8 @@ class DashboardScreen extends ConsumerWidget {
           QuoteCard(),
           const SizedBox(height: 12),
           _monthHeader(ref, month, canGoNext),
-          const SizedBox(height: 12),
-          GlassCard(
-            child: Row(
-              children: [
-                _amountColumn('收入', summary.income, AppTheme.incomeColor),
-                _divider(),
-                _amountColumn('支出', summary.expense, AppTheme.expenseColor),
-                _divider(),
-                _amountColumn('结余', summary.balance, AppTheme.accent,
-                    animated: true),
-              ],
-            ),
-          ),
+          const SizedBox(height: 14),
+          _balanceHero(summary),
           const SizedBox(height: 16),
           // ignore: prefer_const_constructors —— 必须非 const：主题切换时强制重建刷新卡片颜色
           BudgetCard(),
@@ -116,28 +107,45 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  // ---------- 月份切换 ----------
+  // ---------- 月份切换（玻璃胶囊） ----------
   Widget _monthHeader(WidgetRef ref, DateTime month, bool canGoNext) {
     // 黑色背景下反白，保证背景上的文字/图标可读
     final dark = ref.watch(backgroundThemeProvider).isDark;
     final onBg = ThemeConfig.onBackground(dark);
     final onBgDim = ThemeConfig.onBackground(dark, alpha: 0.30);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          onPressed: () => _shiftMonth(ref, -1),
-          icon: Icon(Icons.chevron_left_rounded, color: onBg),
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.glassFillStrong,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppTheme.glassBorder),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () => _shiftMonth(ref, -1),
+                  icon: Icon(Icons.chevron_left_rounded, color: onBg),
+                ),
+                Text(FormatUtils.monthTitle(month),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: onBg)),
+                IconButton(
+                  onPressed: canGoNext ? () => _shiftMonth(ref, 1) : null,
+                  icon: Icon(Icons.chevron_right_rounded,
+                      color: canGoNext ? onBg : onBgDim),
+                ),
+              ],
+            ),
+          ),
         ),
-        Text(FormatUtils.monthTitle(month),
-            style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: onBg)),
-        IconButton(
-          onPressed: canGoNext ? () => _shiftMonth(ref, 1) : null,
-          icon: Icon(Icons.chevron_right_rounded,
-              color: canGoNext ? onBg : onBgDim),
-        ),
-      ],
+      ),
     );
   }
 
@@ -147,41 +155,91 @@ class DashboardScreen extends ConsumerWidget {
         DateTime(m.year, m.month + delta);
   }
 
-  Widget _divider() => Container(
+  // ---------- 本月收支 Hero 卡：主色渐变 + 柔光装饰 ----------
+  Widget _balanceHero(MonthSummary summary) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: AppTheme.accentGradient,
+        ),
+        boxShadow: const [
+          BoxShadow(
+              color: AppTheme.accentGlow,
+              blurRadius: 24,
+              offset: Offset(0, 12)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -46,
+              right: -28,
+              child: _heroCircle(130, 0.10),
+            ),
+            Positioned(
+              bottom: -64,
+              left: 130,
+              child: _heroCircle(120, 0.07),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+              child: Row(
+                children: [
+                  _heroColumn('收入', FormatUtils.money(summary.income)),
+                  _heroDivider(),
+                  _heroColumn('支出', FormatUtils.money(summary.expense)),
+                  _heroDivider(),
+                  _heroColumn('结余', null, animatedValue: summary.balance),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _heroCircle(double size, double alpha) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: alpha),
+      ),
+    );
+  }
+
+  Widget _heroDivider() => Container(
         width: 1,
-        height: 36,
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        color: AppTheme.onSurface(alpha: 0.15),
+        height: 34,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        color: Colors.white.withValues(alpha: 0.25),
       );
 
-  // ---------- 摘要列 ----------
-  Widget _amountColumn(String label, double value, Color color,
-      {bool animated = false}) {
+  /// Hero 卡摘要列：[animatedValue] 非 null 时使用数字滚动（结余）
+  Widget _heroColumn(String label, String? text, {double? animatedValue}) {
+    const amountStyle = TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+      letterSpacing: 0.3,
+    );
     return Expanded(
       child: Column(
         children: [
           Text(label,
-              style: TextStyle(
-                  fontSize: 12, color: AppTheme.onSurface(alpha: 0.60))),
-          const SizedBox(height: 6),
+              style: const TextStyle(fontSize: 12, color: Colors.white70)),
+          const SizedBox(height: 8),
           FittedBox(
-            child: animated
-                ? CountUpText(
-                    value: value,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  )
-                : Text(
-                    FormatUtils.money(value),
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
+            child: animatedValue != null
+                ? CountUpText(value: animatedValue, style: amountStyle)
+                : Text(text!, style: amountStyle),
           ),
         ],
       ),

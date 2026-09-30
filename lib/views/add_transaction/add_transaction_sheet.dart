@@ -371,11 +371,26 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         }),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          height: 40,
+          height: 42,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected ? AppTheme.accent : AppTheme.onSurface(alpha: 0.06),
+            gradient: selected
+                ? const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: AppTheme.accentGradient,
+                  )
+                : null,
+            color: selected ? null : AppTheme.onSurface(alpha: 0.06),
             borderRadius: BorderRadius.circular(14),
+            boxShadow: selected
+                ? const [
+                    BoxShadow(
+                        color: AppTheme.accentGlow,
+                        blurRadius: 12,
+                        offset: Offset(0, 4)),
+                  ]
+                : null,
           ),
           child: Text(
             label,
@@ -395,9 +410,13 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppTheme.onSurface(alpha: 0.08),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppTheme.glassFillStrong, AppTheme.glassFill],
+        ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.onSurface(alpha: 0.20)),
+        border: Border.all(color: AppTheme.glassBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -525,7 +544,6 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     final categoriesAsync = _type == TransactionType.income
         ? ref.watch(incomeCategoriesProvider)
         : ref.watch(expenseCategoriesProvider);
-    final fallbackName = _type == TransactionType.income ? '收入' : '其他';
 
     return categoriesAsync.when(
       loading: () => const Padding(
@@ -551,12 +569,14 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
           );
         }
-        // 编辑模式下若无当前分类名，则默认选中第一个
-        final selected = _category ?? fallbackName;
-        if (CategoryUtils.byName(categories, selected) == null) {
-          // 名称不存在（可能已被删除），回退第一个
-          _category ??= categories.first.name;
+        // 未选择或当前分类在该类型下不存在（新增 / 切换收支类型 / 分类被删除）时，
+        // 默认选中第一个分类——必须与 _save() 的兜底逻辑保持一致，
+        // 否则会出现「高亮其他、实际存成餐饮」的选中态与保存值不一致问题
+        if (_category == null ||
+            CategoryUtils.byName(categories, _category!) == null) {
+          _category = categories.first.name;
         }
+        final selected = _category!;
         return Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -582,14 +602,30 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         width: 64,
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: 0.30)
-              : AppTheme.onSurface(alpha: 0.08),
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    color.withValues(alpha: 0.38),
+                    color.withValues(alpha: 0.22),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : AppTheme.onSurface(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? color : AppTheme.onSurface(alpha: 0.15),
             width: isSelected ? 1.5 : 1,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                      color: color.withValues(alpha: 0.40),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4)),
+                ]
+              : null,
         ),
         child: Column(
           children: [
@@ -631,17 +667,35 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         SizedBox(
           width: double.infinity,
           height: 52,
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18)),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: AppTheme.accentGradient,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: const [
+                BoxShadow(
+                    color: AppTheme.accentGlow,
+                    blurRadius: 16,
+                    offset: Offset(0, 6)),
+              ],
             ),
-            onPressed: _save,
-            child: Text(_isEdit ? '保存修改' : '保存',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: _save,
+                child: Center(
+                  child: Text(_isEdit ? '保存修改' : '保存',
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                ),
+              ),
+            ),
           ),
         ),
       ],

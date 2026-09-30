@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../utils/app_theme.dart';
 import '../viewmodels/theme_providers.dart';
 
 /// 全局背景：柔和渐变 + 淡光斑（清爽记账风；支持多套背景主题切换）
@@ -51,7 +53,7 @@ class GradientBackground extends ConsumerWidget {
                   color: Colors.white.withValues(alpha: maskAlpha)),
             ),
           ] else ...[
-            // 右上光斑
+            // 右上光斑（高斯模糊成柔光，供玻璃卡片透出层次）
             Positioned(
               top: -100,
               right: -80,
@@ -63,6 +65,16 @@ class GradientBackground extends ConsumerWidget {
               left: -100,
               child: _blob(theme.blob2.withValues(alpha: 0.16), 320),
             ),
+            // 中上主色微光，让整体不再是纯灰白底
+            Positioned(
+              top: 180,
+              left: -120,
+              child: _blob(
+                AppTheme.accentLight
+                    .withValues(alpha: theme.isDark ? 0.10 : 0.08),
+                260,
+              ),
+            ),
           ],
           child,
         ],
@@ -70,12 +82,15 @@ class GradientBackground extends ConsumerWidget {
     );
   }
 
-  Widget _blob(Color color, double size) {
+  Widget _blob(Color color, double size, {double sigma = 55}) {
     return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      child: ImageFiltered(
+        imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
       ),
     );
   }

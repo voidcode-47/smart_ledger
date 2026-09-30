@@ -48,7 +48,7 @@ class _KeyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDelete = label == 'del';
     return Material(
-      color: AppTheme.onSurface(alpha: 0.06),
+      color: AppTheme.glassFill,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),

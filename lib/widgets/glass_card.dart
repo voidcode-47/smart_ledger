@@ -1,8 +1,14 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../utils/app_theme.dart';
 
-/// 卡片（清爽记账风）：白底 + 细边框 + 轻阴影 + 大圆角
+/// 玻璃拟态卡片：背景高斯模糊 + 半透明渐变填充 + 顶部高光描边 + 柔影
+/// （Glassmorphism：frosted glass / light reflection / z-depth）
+///
+/// 传入 [color] 时使用指定纯色填充（不随主题做透明渐变），
+/// 但仍保留模糊、描边与阴影，保证视觉统一。
 class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
@@ -19,21 +25,33 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(borderRadius);
     return Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: color ?? AppTheme.cardColor,
-        borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: AppTheme.dividerColor, width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
+      decoration: BoxDecoration(borderRadius: radius, boxShadow: AppTheme.glassShadow),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: AppTheme.glassBlurSigma,
+            sigmaY: AppTheme.glassBlurSigma,
           ),
-        ],
+          child: Container(
+            padding: padding,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: color != null
+                    ? [color!, color!]
+                    : [AppTheme.glassFillStrong, AppTheme.glassFill],
+              ),
+              borderRadius: radius,
+              border: Border.all(color: AppTheme.glassBorder),
+            ),
+            child: child,
+          ),
+        ),
       ),
-      child: child,
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -203,14 +204,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 children: [
                   _textAddFab('fab_text_desktop'),
                   const SizedBox(height: 12),
-                  FloatingActionButton.extended(
-                    heroTag: 'fab_desktop',
-                    backgroundColor: AppTheme.accent,
-                    foregroundColor: Colors.white,
-                    onPressed: _openAddSheet,
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('记一笔'),
-                  ),
+                  _gradientAddButton(onTap: _openAddSheet, extended: true),
                 ],
               )
             : Column(
@@ -218,32 +212,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 children: [
                   _textAddFab('fab_text_mobile'),
                   const SizedBox(height: 10),
-                  FloatingActionButton(
-                    heroTag: 'fab_mobile',
-                    backgroundColor: AppTheme.accent,
-                    foregroundColor: Colors.white,
-                    onPressed: _openAddSheet,
-                    child: const Icon(Icons.add_rounded),
-                  ),
+                  _gradientAddButton(onTap: _openAddSheet),
                 ],
               ),
         floatingActionButtonLocation: desktop
             ? FloatingActionButtonLocation.endFloat
-            : FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar: desktop ? null : _buildMobileBottomBar(),
+            : FloatingActionButtonLocation.centerFloat,
+        bottomNavigationBar: desktop ? null : _buildGlassBottomBar(),
       ),
     );
   }
 
-  /// 一句话记账小按钮（主 FAB 上方）
+  /// 一句话记账小按钮（主按钮上方）：磨砂玻璃圆钮
   Widget _textAddFab(String heroTag) {
     return FloatingActionButton.small(
       heroTag: heroTag,
-      backgroundColor: AppTheme.cardColor,
-      foregroundColor: AppTheme.accent,
+      backgroundColor: AppTheme.glassFillStrong,
+      elevation: 2,
+      foregroundColor: AppTheme.isDark ? AppTheme.accentLight : AppTheme.accent,
       tooltip: '一句话记账（如：午饭 32）',
       onPressed: _openTextAdd,
       child: const Icon(Icons.edit_note_rounded, size: 22),
+    );
+  }
+
+  /// 渐变主按钮：手机为 58 圆角方块，桌面为横向胶囊
+  Widget _gradientAddButton(
+      {required VoidCallback onTap, bool extended = false}) {
+    final radius = BorderRadius.circular(extended ? 26 : 20);
+    return Tooltip(
+      message: '记一笔',
+      child: Container(
+        height: extended ? 52 : 58,
+        padding:
+            extended ? const EdgeInsets.symmetric(horizontal: 22) : null,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: AppTheme.accentGradient,
+          ),
+          borderRadius: radius,
+          boxShadow: const [
+            BoxShadow(
+                color: AppTheme.accentGlow,
+                blurRadius: 18,
+                offset: Offset(0, 8)),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: radius,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+                if (extended) ...[
+                  const SizedBox(width: 8),
+                  const Text('记一笔',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15)),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -304,55 +343,97 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return IndexedStack(index: _index, children: _pages);
   }
 
-  Widget _buildMobileBottomBar() {
+  /// 手机端：悬浮玻璃导航栏（模糊 + 高光描边 + 渐变选中胶囊）
+  Widget _buildGlassBottomBar() {
     Widget item(int i, IconData icon, String label) {
       final selected = _index == i;
+      final dim = AppTheme.onSurface(alpha: 0.55);
       return Expanded(
-        child: InkWell(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => setState(() => _index = i),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon,
-                    size: 22,
-                    color: selected
-                        ? AppTheme.accent
-                        : AppTheme.onSurface(alpha: 0.55)),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: selected
-                        ? AppTheme.accent
-                        : AppTheme.onSurface(alpha: 0.55),
-                  ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
+                decoration: BoxDecoration(
+                  gradient: selected
+                      ? const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: AppTheme.accentGradient,
+                        )
+                      : null,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: selected
+                      ? const [
+                          BoxShadow(
+                              color: AppTheme.accentGlow,
+                              blurRadius: 10,
+                              offset: Offset(0, 4)),
+                        ]
+                      : null,
                 ),
-              ],
-            ),
+                child: Icon(icon,
+                    size: 20, color: selected ? Colors.white : dim),
+              ),
+              const SizedBox(height: 3),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 220),
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? AppTheme.accent : dim,
+                ),
+                child: Text(label),
+              ),
+            ],
           ),
         ),
       );
     }
 
-    return BottomAppBar(
-      // 跟随主题：深色主题下为深色底（未选中图标为浅色半透明），浅色主题下为白色底
-      color: AppTheme.cardColor,
-      surfaceTintColor: Colors.transparent,
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      elevation: 4,
-      child: Row(
-        children: [
-          item(0, Icons.dashboard_rounded, '仪表盘'),
-          item(1, Icons.insights_rounded, '统计'),
-          const SizedBox(width: 56), // 中间缺口留给 FAB
-          item(2, Icons.receipt_long_rounded, '流水'),
-          item(3, Icons.folder_rounded, '数据'),
-        ],
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: AppTheme.glassShadow,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              child: Container(
+                height: 64,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [AppTheme.glassFillStrong, AppTheme.glassFill],
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: AppTheme.glassBorder),
+                ),
+                child: Row(
+                  children: [
+                    item(0, Icons.dashboard_rounded, '仪表盘'),
+                    item(1, Icons.insights_rounded, '统计'),
+                    const SizedBox(width: 60), // 居中悬浮主按钮留位
+                    item(2, Icons.receipt_long_rounded, '流水'),
+                    item(3, Icons.folder_rounded, '数据'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

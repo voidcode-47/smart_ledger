@@ -52,6 +52,14 @@ app.*.map.json
 
 release/
 
+# 编辑器（按需共享时可自行取消注释）
+.vscode/
+
+# 本地运行数据/备份（隐私数据，禁止入库）
+*.db
+*.sqlite
+*.sqlite3
+crash.log
 
 # 游戏库下载/解析临时文件
 _games.zip
