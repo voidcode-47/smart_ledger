@@ -102,21 +102,29 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
       style: TextStyle(color: AppTheme.textPrimary),
       decoration: InputDecoration(
         hintText: '搜索备注或分类…',
-        hintStyle: TextStyle(color: AppTheme.onSurface(alpha: 0.40)),
-        prefixIcon: Icon(Icons.search_rounded,
-            color: AppTheme.onSurface(alpha: 0.60)),
+        hintStyle: TextStyle(color: AppTheme.textHint),
+        prefixIcon:
+            Icon(Icons.search_rounded, color: AppTheme.textSecondary),
         suffixIcon: _searchCtrl.text.isEmpty
             ? null
             : IconButton(
                 icon: Icon(Icons.clear_rounded,
-                    color: AppTheme.onSurface(alpha: 0.60)),
+                    color: AppTheme.textSecondary),
                 onPressed: () => setState(() => _searchCtrl.clear()),
               ),
         filled: true,
-        fillColor: AppTheme.onSurface(alpha: 0.08),
+        fillColor: AppTheme.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppTheme.dividerColor, width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppTheme.dividerColor, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppTheme.accent, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
       ),
@@ -130,13 +138,13 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
         label: Text(label),
         selected: selected,
         selectedColor: AppTheme.accent,
-        backgroundColor: AppTheme.onSurface(alpha: 0.10),
+        backgroundColor: AppTheme.surface,
         labelStyle: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: selected ? Colors.white : AppTheme.textSecondary,
         ),
-        side: BorderSide.none,
+        side: BorderSide(color: AppTheme.dividerColor, width: 1),
         showCheckmark: false,
         onSelected: (_) => setState(() => _typeFilter = value),
       );
@@ -169,8 +177,9 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: AppTheme.onSurface(alpha: 0.10),
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.dividerColor, width: 1),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String?>(
@@ -179,7 +188,7 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
           dropdownColor: AppTheme.cardColor,
           style: TextStyle(fontSize: 12, color: AppTheme.textPrimary),
           icon: Icon(Icons.expand_more_rounded,
-              size: 18, color: AppTheme.onSurface(alpha: 0.70)),
+              size: 18, color: AppTheme.textSecondary),
           items: items,
           onChanged: (v) => setState(() => _categoryFilter = v),
         ),
@@ -231,33 +240,38 @@ class _LedgerScreenState extends ConsumerState<LedgerScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
+          padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
           child: Row(
             children: [
               Text(FormatUtils.monthTitle(month),
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700)),
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary)),
               const SizedBox(width: 8),
               Text('${entries.length} 笔',
                   style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.onSurface(alpha: 0.45))),
+                      color: AppTheme.textHint)),
               const Spacer(),
               if (expense > 0)
                 Text('支出 ${FormatUtils.money(expense)}',
                     style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.onSurface(alpha: 0.60))),
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color: AppTheme.textSecondary)),
             ],
           ),
         ),
         GlassCard(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          borderRadius: 12,
           child: Column(
             children: [
               for (var i = 0; i < entries.length; i++) ...[
                 if (i > 0)
-                  Divider(
-                      height: 1, color: AppTheme.onSurface(alpha: 0.06)),
+                    Divider(height: 1, color: AppTheme.dividerColor),
                 TransactionTile(
                   entry: entries[i],
                   onEdit: entries[i].id == null

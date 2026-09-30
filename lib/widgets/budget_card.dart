@@ -42,7 +42,7 @@ class BudgetCard extends ConsumerWidget {
               ? AppTheme.expenseColor
               : ratio >= 0.8
                   ? const Color(0xFFFAAD14)
-                  : const Color(0xFF4ADE80);
+                  : AppTheme.accent;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,14 +69,17 @@ class BudgetCard extends ConsumerWidget {
                   Text(
                     FormatUtils.money(monthExpense),
                     style: const TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        fontFeatures: [FontFeature.tabularFigures()]),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(left: 6, bottom: 3),
                     child: Text(' / ${FormatUtils.money(budget)}',
                         style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.onSurface(alpha: 0.60))),
+                            color: AppTheme.textSecondary)),
                   ),
                   const Spacer(),
                   Padding(
@@ -88,9 +91,10 @@ class BudgetCard extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                         color: over
                             ? AppTheme.expenseColor
-                            : const Color(0xFF4ADE80),
+                            : AppTheme.incomeColor,
                       ),
                     ),
                   ),
@@ -101,8 +105,8 @@ class BudgetCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
                   value: ratio,
-                  minHeight: 8,
-                  backgroundColor: AppTheme.onSurface(alpha: 0.12),
+                  minHeight: 6,
+                  backgroundColor: AppTheme.dividerColor,
                   valueColor: AlwaysStoppedAnimation(progressColor),
                 ),
               ),
@@ -111,7 +115,8 @@ class BudgetCard extends ConsumerWidget {
                 '已支出 ${(ratio * 100).toStringAsFixed(0)}%',
                 style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.onSurface(alpha: 0.50)),
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textHint),
               ),
             ],
           );
@@ -129,26 +134,26 @@ class BudgetCard extends ConsumerWidget {
         child: Row(
           children: [
             Icon(Icons.savings_outlined,
-                size: 26, color: AppTheme.onSurface(alpha: 0.70)),
+                size: 26, color: AppTheme.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('本月预算',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 3),
                   Text(
                     '点击为 ${FormatUtils.monthTitle(month)} 设置预算，随时掌握超支情况',
                     style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.onSurface(alpha: 0.55)),
+                        fontSize: 12, color: AppTheme.textSecondary),
                   ),
                 ],
               ),
             ),
             Icon(Icons.add_circle_outline_rounded,
-                color: AppTheme.onSurface(alpha: 0.60)),
+                color: AppTheme.textSecondary),
           ],
         ),
       ),

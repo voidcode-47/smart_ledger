@@ -74,11 +74,12 @@ Future<void> _openSheet(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 400));
 }
 
-/// 读取某分类网格项的边框（选中：width 1.5 + 分类色；未选中：width 1）
+/// 读取某分类网格项的边框
+/// 新设计：选中 = width 1.5 + teal(accent) 描边；未选中 = width 1.5 + 分隔线色
 Border? _borderOf(WidgetTester tester, String name) {
-  final box = tester.widget<AnimatedContainer>(
+  final box = tester.widget<Container>(
     find
-        .ancestor(of: find.text(name), matching: find.byType(AnimatedContainer))
+        .ancestor(of: find.text(name), matching: find.byType(Container))
         .first,
   );
   return (box.decoration as BoxDecoration).border as Border?;
@@ -86,7 +87,8 @@ Border? _borderOf(WidgetTester tester, String name) {
 
 bool _isSelected(WidgetTester tester, String name) {
   final border = _borderOf(tester, name);
-  return border != null && border.top.width == 1.5;
+  // 选中态边框色为 teal 主色（AppTheme.accent = 0xFF0F766E）
+  return border != null && border.top.color == const Color(0xFF0F766E);
 }
 
 void main() {
@@ -114,7 +116,8 @@ void main() {
         reason: '新增支出时应默认高亮排序第一的分类');
     expect(_isSelected(tester, '其他'), isFalse,
         reason: '不应再硬编码高亮「其他」');
-    expect(_borderOf(tester, '餐饮')!.top.color, const Color(0xFFF6AD55));
+    // 新设计：选中态边框色统一为 teal 主色（非分类色）
+    expect(_borderOf(tester, '餐饮')!.top.color, const Color(0xFF0F766E));
 
     // 输入金额 8 并保存
     await tester.tap(find.text('8'));

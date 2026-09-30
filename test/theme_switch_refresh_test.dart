@@ -28,7 +28,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
 
-    // 白色主题：格言来源文字为黑色系（onSurface 0.5）
+    // 白色主题：格言来源文字为深色系（textSecondary #737373，低亮度）
     final lightColor = sourceTextColor(tester);
     expect(lightColor, isNotNull);
     expect(lightColor!.computeLuminance() < 0.5, isTrue,
@@ -41,11 +41,15 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    // 黑色主题：格言来源文字应变为白色系
+    // 黑色主题：格言来源文字应变亮（textSecondary 深色板 #A3A3A3，
+    // 亮度高于浅色板的 #737373，证明颜色已随主题刷新）
     final darkColor = sourceTextColor(tester);
     expect(darkColor, isNotNull);
-    expect(darkColor!.computeLuminance() > 0.5, isTrue,
-        reason: '黑色主题下格言来源文字应为浅色');
+    expect(darkColor != lightColor, isTrue,
+        reason: '切到黑色主题后格言来源文字颜色必须变化');
+    expect(
+        darkColor!.computeLuminance() > lightColor.computeLuminance(), isTrue,
+        reason: '黑色主题下格言来源文字亮度应高于浅色主题');
 
     // 切回白色主题再验证
     await container

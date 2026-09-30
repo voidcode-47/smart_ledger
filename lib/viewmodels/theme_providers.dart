@@ -6,14 +6,56 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/app_theme.dart';
 import '../utils/theme_config.dart';
 
-/// 一张自定义背景：图片 + 透明度
+/// 滤镜预设索引
+abstract class BgFilter {
+  static const int none = 0;
+  static const int mono = 1; // 黑白
+  static const int sepia = 2; // 怀旧
+  static const int cool = 3; // 冷调
+  static const int warm = 4; // 暖调
+}
+
+/// 卡片呈现模式
+abstract class CardMode {
+  static const int solid = 0; // 纯色不透明卡片（默认，无背景可见）
+  static const int glass = 1; // 毛玻璃卡片（背景模糊后透出）
+  static const int transparent = 2; // 半透明纯色卡片（背景清晰透出，无模糊）
+}
+
+/// 图片填充方式
+abstract class BgFit {
+  static const int cover = 0;
+  static const int contain = 1;
+  static const int fill = 2;
+}
+
+/// 文字取色模式
+abstract class BgTextMode {
+  static const int auto = -1;
+  static const int forceLight = 0;
+  static const int forceDark = 1;
+}
+
+/// 一张自定义背景：图片 + 透明度 + 丰富效果（全部可选，默认关闭）
 class CustomBackgroundItem {
   const CustomBackgroundItem({
     required this.id,
     required this.path,
     this.opacity = 0.85,
+    this.blur = 0.0,
+    this.filter = BgFilter.none,
+    this.vignette = 0.0,
+    this.maskColor = 0xFFFFFFFF,
+    this.maskAlpha = 0.0,
+    this.cardMode = CardMode.solid,
+    this.glassBlur = 12.0,
+    this.glassColor = 0xFFFFFFFF,
+    this.glassAlpha = 0.3,
+    this.fitMode = BgFit.cover,
+    this.textMode = BgTextMode.auto,
   });
 
   final String id;
@@ -22,11 +64,68 @@ class CustomBackgroundItem {
   /// 图片不透明度（0.2 ~ 1.0）
   final double opacity;
 
-  CustomBackgroundItem copyWith({double? opacity}) {
+  /// 图片高斯模糊 sigma（0 ~ 20）
+  final double blur;
+
+  /// 滤镜预设（BgFilter.*）
+  final int filter;
+
+  /// 暗角强度（0 ~ 1）
+  final double vignette;
+
+  /// 遮罩颜色（ARGB int）
+  final int maskColor;
+
+  /// 遮罩透明度（0 ~ 1）
+  final double maskAlpha;
+
+  /// 卡片呈现模式（CardMode.*：solid / glass / transparent）
+  final int cardMode;
+
+  /// 玻璃层模糊 sigma（0 ~ 30）
+  final double glassBlur;
+
+  /// 玻璃层颜色（ARGB int）
+  final int glassColor;
+
+  /// 玻璃层透明度（0 ~ 1）
+  final double glassAlpha;
+
+  /// 图片填充方式（BgFit.*）
+  final int fitMode;
+
+  /// 文字取色模式（BgTextMode.*）
+  final int textMode;
+
+  CustomBackgroundItem copyWith({
+    double? opacity,
+    double? blur,
+    int? filter,
+    double? vignette,
+    int? maskColor,
+    double? maskAlpha,
+    int? cardMode,
+    double? glassBlur,
+    int? glassColor,
+    double? glassAlpha,
+    int? fitMode,
+    int? textMode,
+  }) {
     return CustomBackgroundItem(
       id: id,
       path: path,
       opacity: opacity ?? this.opacity,
+      blur: blur ?? this.blur,
+      filter: filter ?? this.filter,
+      vignette: vignette ?? this.vignette,
+      maskColor: maskColor ?? this.maskColor,
+      maskAlpha: maskAlpha ?? this.maskAlpha,
+      cardMode: cardMode ?? this.cardMode,
+      glassBlur: glassBlur ?? this.glassBlur,
+      glassColor: glassColor ?? this.glassColor,
+      glassAlpha: glassAlpha ?? this.glassAlpha,
+      fitMode: fitMode ?? this.fitMode,
+      textMode: textMode ?? this.textMode,
     );
   }
 
@@ -34,6 +133,17 @@ class CustomBackgroundItem {
         'id': id,
         'path': path,
         'opacity': opacity,
+        'blur': blur,
+        'filter': filter,
+        'vignette': vignette,
+        'maskColor': maskColor,
+        'maskAlpha': maskAlpha,
+        'cardMode': cardMode,
+        'glassBlur': glassBlur,
+        'glassColor': glassColor,
+        'glassAlpha': glassAlpha,
+        'fitMode': fitMode,
+        'textMode': textMode,
       };
 
   static CustomBackgroundItem fromJson(Map<String, dynamic> m) {
@@ -41,6 +151,21 @@ class CustomBackgroundItem {
       id: m['id'] as String,
       path: m['path'] as String,
       opacity: (m['opacity'] as num?)?.toDouble() ?? 0.85,
+      blur: (m['blur'] as num?)?.toDouble() ?? 0.0,
+      filter: (m['filter'] as num?)?.toInt() ?? BgFilter.none,
+      vignette: (m['vignette'] as num?)?.toDouble() ?? 0.0,
+      maskColor: (m['maskColor'] as num?)?.toInt() ?? 0xFFFFFFFF,
+      maskAlpha: (m['maskAlpha'] as num?)?.toDouble() ?? 0.0,
+      // 兼容旧数据：旧版 glassEnabled=true 映射为 glass 模式
+      cardMode: (m['cardMode'] as num?)?.toInt() ??
+          ((m['glassEnabled'] as bool?) ?? false
+              ? CardMode.glass
+              : CardMode.solid),
+      glassBlur: (m['glassBlur'] as num?)?.toDouble() ?? 12.0,
+      glassColor: (m['glassColor'] as num?)?.toInt() ?? 0xFFFFFFFF,
+      glassAlpha: (m['glassAlpha'] as num?)?.toDouble() ?? 0.3,
+      fitMode: (m['fitMode'] as num?)?.toInt() ?? BgFit.cover,
+      textMode: (m['textMode'] as num?)?.toInt() ?? BgTextMode.auto,
     );
   }
 }
@@ -157,6 +282,18 @@ class CustomBackgroundsNotifier extends StateNotifier<CustomBackgroundsState> {
           migratedId: migrated ? items.first.id : null,
         ),
       );
+      // 恢复用户上次选择的文字取色模式
+      final a = state.active;
+      if (a != null) {
+        switch (a.textMode) {
+          case BgTextMode.forceLight:
+            AppTheme.setDark(true);
+            break;
+          case BgTextMode.forceDark:
+            AppTheme.setDark(false);
+            break;
+        }
+      }
       // 持久化本次解析结果（含迁移），保证与磁盘状态一致
       await _persist();
     } catch (_) {}
@@ -254,6 +391,181 @@ class CustomBackgroundsNotifier extends StateNotifier<CustomBackgroundsState> {
       ],
       activeId: state.activeId,
     );
+    await _persist();
+  }
+
+  /// 图片高斯模糊 sigma（0 ~ 20）
+  Future<void> setBlur(String id, double blur) async {
+    final v = blur.clamp(0.0, 20.0);
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(blur: v) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 滤镜预设（BgFilter.*）
+  Future<void> setFilter(String id, int filter) async {
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(filter: filter) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 暗角强度（0 ~ 1）
+  Future<void> setVignette(String id, double vignette) async {
+    final v = vignette.clamp(0.0, 1.0);
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(vignette: v) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 遮罩颜色（ARGB int）
+  Future<void> setMaskColor(String id, int color) async {
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(maskColor: color) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 遮罩透明度（0 ~ 1）
+  Future<void> setMaskAlpha(String id, double alpha) async {
+    final v = alpha.clamp(0.0, 1.0);
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(maskAlpha: v) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 卡片呈现模式（CardMode.*）
+  Future<void> setCardMode(String id, int mode) async {
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items)
+          e.id == id ? e.copyWith(cardMode: mode) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 玻璃层模糊 sigma（0 ~ 30）
+  Future<void> setGlassBlur(String id, double blur) async {
+    final v = blur.clamp(0.0, 30.0);
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(glassBlur: v) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 玻璃层颜色（ARGB int）
+  Future<void> setGlassColor(String id, int color) async {
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(glassColor: color) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 玻璃层透明度（0 ~ 1）
+  Future<void> setGlassAlpha(String id, double alpha) async {
+    final v = alpha.clamp(0.0, 1.0);
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(glassAlpha: v) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 图片填充方式（BgFit.*）
+  Future<void> setFitMode(String id, int fit) async {
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(fitMode: fit) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 文字取色模式（BgTextMode.*）
+  Future<void> setTextMode(String id, int mode) async {
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items) e.id == id ? e.copyWith(textMode: mode) : e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 重置当前背景的所有效果为默认（保留图片与透明度）
+  Future<void> resetEffects(String id) async {
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items)
+          if (e.id == id)
+            CustomBackgroundItem(id: e.id, path: e.path, opacity: e.opacity)
+          else
+            e,
+      ],
+      activeId: state.activeId,
+    );
+    await _persist();
+  }
+
+  /// 应用推荐预设：背景清晰 + 文字清晰（遮罩 35% + 卡片玻璃 45%）
+  Future<void> applyRecommended(String id) async {
+    final dark = AppTheme.isDark;
+    final maskColor = dark ? 0xFF000000 : 0xFFFFFFFF;
+    final glassColor = dark ? 0xFF141414 : 0xFFFFFFFF;
+    state = CustomBackgroundsState(
+      items: [
+        for (final e in state.items)
+          if (e.id == id)
+            e.copyWith(
+              opacity: 0.7,
+              blur: 0.0,
+              filter: BgFilter.none,
+              vignette: 0.0,
+              maskColor: maskColor,
+              maskAlpha: 0.35,
+              cardMode: CardMode.glass,
+              glassBlur: 12.0,
+              glassColor: glassColor,
+              glassAlpha: 0.45,
+              fitMode: BgFit.cover,
+              textMode: BgTextMode.auto,
+            )
+          else
+            e,
+      ],
+      activeId: state.activeId,
+    );
+    // 同步文字取色
+    AppTheme.setDark(dark);
     await _persist();
   }
 

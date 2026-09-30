@@ -6,7 +6,7 @@ import '../utils/app_theme.dart';
 import '../utils/quote_utils.dart';
 import 'glass_card.dart';
 
-/// 仪表盘顶部名言卡：进入时随机显示（联网优先，失败回退本地），
+/// 每日格言卡片：点击复制、下拉刷新（联网获取）仪表盘顶部名言卡：进入时随机显示（联网优先，失败回退本地），
 /// 点击复制，可换一条
 class QuoteCard extends StatefulWidget {
   const QuoteCard({super.key});
@@ -83,7 +83,7 @@ class _QuoteCardState extends State<QuoteCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(Icons.format_quote_rounded,
-                  size: 30, color: AppTheme.accent.withValues(alpha: 0.85)),
+                  size: 28, color: AppTheme.accent),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -102,7 +102,8 @@ class _QuoteCardState extends State<QuoteCard> {
                       '—— ${_quote.source}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: AppTheme.onSurface(alpha: 0.50),
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                   ],
@@ -118,13 +119,13 @@ class _QuoteCardState extends State<QuoteCard> {
                         height: 16,
                         child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppTheme.onSurface(alpha: 0.45)),
+                            color: AppTheme.textHint),
                       )
                     : Icon(Icons.refresh_rounded,
-                        size: 18, color: AppTheme.onSurface(alpha: 0.55)),
+                        size: 18, color: AppTheme.textSecondary),
               ),
               Icon(Icons.copy_rounded,
-                  size: 15, color: AppTheme.onSurface(alpha: 0.35)),
+                  size: 15, color: AppTheme.textHint),
             ],
           ),
         ),

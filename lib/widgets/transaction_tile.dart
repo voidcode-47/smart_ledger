@@ -45,7 +45,7 @@ class TransactionTile extends ConsumerWidget {
           padding: const EdgeInsets.only(right: 24),
           decoration: BoxDecoration(
             color: AppTheme.expenseColor.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: const Column(
             mainAxisSize: MainAxisSize.min,
@@ -64,9 +64,10 @@ class TransactionTile extends ConsumerWidget {
     return tile;
   }
 
+  /// Things 3 风格流水条目：圆形描边图标 + 分类名/备注 + 右对齐金额
   Widget _tileContent(BuildContext context, Color color, Category? cat) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       onTap: onEdit,
       onLongPress: onDelete == null
           ? null
@@ -78,12 +79,14 @@ class TransactionTile extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
+            // 左侧：圆形描边图标 36x36（非填充）
             Container(
-              width: 42,
-              height: 42,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(14),
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: color, width: 1.5),
               ),
               child: Icon(
                 entry.isIncome
@@ -92,17 +95,19 @@ class TransactionTile extends ConsumerWidget {
                         ? CategoryUtils.iconOfCategory(cat)
                         : CategoryUtils.fallbackIcon),
                 color: color,
-                size: 22,
+                size: 18,
               ),
             ),
             const SizedBox(width: 12),
+            // 中间：分类名 15sp w500 + 备注 13sp 灰
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     entry.category,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
                   ),
                   if (entry.note.isNotEmpty)
                     Text(
@@ -110,54 +115,33 @@ class TransactionTile extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.onSurface(alpha: 0.55),
-                      ),
+                          fontSize: 13, color: AppTheme.textSecondary),
                     ),
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  FormatUtils.signedMoney(entry.amount,
-                      isIncome: entry.isIncome),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: entry.isIncome
-                        ? AppTheme.incomeColor
-                        : AppTheme.expenseColor,
-                  ),
-                ),
-                Text(
-                  FormatUtils.fullDate(entry.date),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppTheme.onSurface(alpha: 0.45),
-                  ),
-                ),
-              ],
+            // 右侧：金额 16sp w600 tabular nums 右对齐，支出红/收入绿
+            Text(
+              FormatUtils.signedMoney(entry.amount, isIncome: entry.isIncome),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: entry.isIncome
+                    ? AppTheme.incomeColor
+                    : AppTheme.expenseColor,
+              ),
             ),
             if (onDelete != null) ...[
-              const SizedBox(width: 4),
-              // 显式删除图标：手机端最可靠的删除入口
+              const SizedBox(width: 8),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () async {
                   final ok = await _confirmDelete(context);
                   if (ok) onDelete?.call();
                 },
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.expenseColor.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.delete_outline_rounded,
-                      size: 17, color: AppTheme.expenseColor),
-                ),
+                child: Icon(Icons.delete_outline_rounded,
+                    size: 18, color: AppTheme.textHint),
               ),
             ],
           ],

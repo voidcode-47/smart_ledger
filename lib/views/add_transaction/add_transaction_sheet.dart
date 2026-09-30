@@ -282,11 +282,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: AppTheme.gradient,
-        ),
+        color: AppTheme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
@@ -331,34 +327,46 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     return Row(
       children: [
         Text(_isEdit ? '编辑流水' : '记一笔',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+                color: AppTheme.textPrimary)),
         const Spacer(),
         if (!_isEdit && ReceiptOcrService.supported)
           IconButton(
             tooltip: '图片识别记账',
             onPressed: _pickImageAndRecognize,
             icon: Icon(Icons.document_scanner_outlined,
-                color: AppTheme.onSurface(alpha: 0.85)),
+                color: AppTheme.textSecondary),
           ),
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(Icons.close_rounded,
-              color: AppTheme.onSurface(alpha: 0.80)),
+          icon:
+              Icon(Icons.close_rounded, color: AppTheme.textSecondary),
         ),
       ],
     );
   }
 
   Widget _typeToggle() {
-    return Row(
-      children: [
-        _typeButton('支出', TransactionType.expense),
-        const SizedBox(width: 10),
-        _typeButton('收入', TransactionType.income),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.dividerColor, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Row(
+        children: [
+          _typeButton('支出', TransactionType.expense),
+          _typeButton('收入', TransactionType.income),
+        ],
+      ),
     );
   }
 
+  /// Linear 风格 segmented control：纯色背景 + 选中态 teal 文字 + 底部 2px 下划线
   Widget _typeButton(String label, TransactionType type) {
     final selected = _type == type;
     return Expanded(
@@ -369,34 +377,23 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           _category = null;
           _aaEnabled = false;
         }),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 42,
+        child: Container(
+          height: 40,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            gradient: selected
-                ? const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: AppTheme.accentGradient,
-                  )
-                : null,
-            color: selected ? null : AppTheme.onSurface(alpha: 0.06),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: selected
-                ? const [
-                    BoxShadow(
-                        color: AppTheme.accentGlow,
-                        blurRadius: 12,
-                        offset: Offset(0, 4)),
-                  ]
-                : null,
+            border: Border(
+              bottom: BorderSide(
+                color: selected ? AppTheme.accent : Colors.transparent,
+                width: 2,
+              ),
+            ),
           ),
           child: Text(
             label,
             style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : AppTheme.textSecondary,
+              fontSize: 15,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected ? AppTheme.accent : AppTheme.textSecondary,
             ),
           ),
         ),
@@ -404,40 +401,36 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
   }
 
+  /// 金额显示区：纯色背景 + 超大数字（48sp w800 tabular nums）
   Widget _amountDisplay() {
     final empty = _amount.isEmpty;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppTheme.glassFillStrong, AppTheme.glassFill],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.glassBorder),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.dividerColor, width: 1),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text('¥',
               style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.onSurface(alpha: 0.60))),
+                  color: AppTheme.textSecondary)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               empty ? '0.00' : _amount,
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: 38,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                color: empty
-                    ? AppTheme.onSurface(alpha: 0.35)
-                    : AppTheme.textPrimary,
+                fontSize: 48,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -1.0,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: empty ? AppTheme.textHint : AppTheme.textPrimary,
               ),
             ),
           ),
@@ -448,23 +441,26 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
   Widget _dateRow() {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       onTap: _pickDate,
       child: Container(
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: AppTheme.onSurface(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.dividerColor, width: 1),
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_rounded, size: 18),
+            Icon(Icons.calendar_today_rounded,
+                size: 18, color: AppTheme.textSecondary),
             const SizedBox(width: 8),
-            Text(FormatUtils.fullDate(_date)),
+            Text(FormatUtils.fullDate(_date),
+                style: TextStyle(color: AppTheme.textPrimary)),
             const Spacer(),
             Icon(Icons.chevron_right_rounded,
-                size: 20, color: AppTheme.onSurface(alpha: 0.50)),
+                size: 20, color: AppTheme.textHint),
           ],
         ),
       ),
@@ -491,8 +487,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppTheme.onSurface(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.dividerColor, width: 1),
       ),
       child: Row(
         children: [
@@ -588,6 +585,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
   }
 
+  /// 分类网格项：选中态 teal 描边 + 浅 teal 底，未选中灰描边；无渐变无辉光
   Widget _categoryItem(Category c, String selected) {
     final isSelected = selected == c.name;
     final color = CategoryUtils.colorOfCategory(c);
@@ -597,44 +595,30 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         _type = c.isIncome ? TransactionType.income : TransactionType.expense;
         _category = c.name;
       }),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+      child: Container(
         width: 64,
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    color.withValues(alpha: 0.38),
-                    color.withValues(alpha: 0.22),
-                  ],
-                )
-              : null,
-          color: isSelected ? null : AppTheme.onSurface(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? AppTheme.accentBg : AppTheme.surface,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? color : AppTheme.onSurface(alpha: 0.15),
-            width: isSelected ? 1.5 : 1,
+            color: isSelected ? AppTheme.accent : AppTheme.dividerColor,
+            width: 1.5,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                      color: color.withValues(alpha: 0.40),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4)),
-                ]
-              : null,
         ),
         child: Column(
           children: [
-            Icon(CategoryUtils.iconOfCategory(c), color: color, size: 24),
+            Icon(CategoryUtils.iconOfCategory(c),
+                color: isSelected ? AppTheme.accent : color, size: 24),
             const SizedBox(height: 6),
             Text(
               c.name.length > 4 ? '${c.name.substring(0, 4)}…' : c.name,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, color: AppTheme.textPrimary),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? AppTheme.accent : AppTheme.textPrimary,
+              ),
             ),
           ],
         ),
@@ -642,6 +626,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
   }
 
+  /// 保存按钮：纯 teal 矩形，白色文字 w600，无渐变无辉光
   Widget _saveButton() {
     return Column(
       children: [
@@ -667,33 +652,18 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         SizedBox(
           width: double.infinity,
           height: 52,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: AppTheme.accentGradient,
-              ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: const [
-                BoxShadow(
-                    color: AppTheme.accentGlow,
-                    blurRadius: 16,
-                    offset: Offset(0, 6)),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(18),
-                onTap: _save,
-                child: Center(
-                  child: Text(_isEdit ? '保存修改' : '保存',
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
-                ),
+          child: Material(
+            color: AppTheme.accent,
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: _save,
+              child: Center(
+                child: Text(_isEdit ? '保存修改' : '保存',
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white)),
               ),
             ),
           ),

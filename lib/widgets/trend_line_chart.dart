@@ -21,7 +21,7 @@ class TrendLineChart extends StatelessWidget {
         child: Center(
           child: Text(
             '暂无数据',
-            style: TextStyle(color: AppTheme.onSurface(alpha: 0.50)),
+            style: TextStyle(color: AppTheme.textHint),
           ),
         ),
       );
@@ -40,11 +40,38 @@ class TrendLineChart extends StatelessWidget {
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (v) => FlLine(
-              color: AppTheme.onSurface(alpha: 0.10),
+              color: AppTheme.dividerColor,
               strokeWidth: 1,
             ),
           ),
           borderData: FlBorderData(show: false),
+          lineTouchData: LineTouchData(
+            enabled: true,
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (_) => AppTheme.surface,
+              tooltipBorder:
+                  BorderSide(color: AppTheme.dividerColor, width: 1),
+              tooltipRoundedRadius: 10,
+              getTooltipItems: (touchedSpots) => touchedSpots
+                  .map((spot) {
+                    final i = spot.spotIndex;
+                    final p = points[i];
+                    return LineTooltipItem(
+                      '${FormatUtils.dayLabel(p.day)}\n¥${FormatUtils.money(p.expense)}',
+                      TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                        fontFeatures: const [
+                          FontFeature.tabularFigures()
+                        ],
+                        height: 1.4,
+                      ),
+                    );
+                  })
+                  .toList(),
+            ),
+          ),
           titlesData: FlTitlesData(
             topTitles:
                 const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -67,8 +94,9 @@ class TrendLineChart extends StatelessWidget {
                     child: Text(
                       FormatUtils.dayLabel(points[i].day),
                       style: TextStyle(
-                        fontSize: 10,
-                        color: AppTheme.onSurface(alpha: 0.60),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textHint,
                       ),
                     ),
                   );
@@ -85,20 +113,10 @@ class TrendLineChart extends StatelessWidget {
               isCurved: true,
               curveSmoothness: 0.35,
               preventCurveOverShooting: true,
-              barWidth: 3,
+              barWidth: 1.5,
               color: AppTheme.accent,
               dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppTheme.accent.withValues(alpha: 0.35),
-                    AppTheme.accent.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
+              belowBarData: BarAreaData(show: false),
             ),
           ],
         ),

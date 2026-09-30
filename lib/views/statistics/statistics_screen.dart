@@ -75,8 +75,7 @@ class StatisticsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 28),
                   child: Center(
                     child: Text('该筛选范围内暂无支出',
-                        style: TextStyle(
-                            color: AppTheme.onSurface(alpha: 0.50))),
+                        style: TextStyle(color: AppTheme.textHint)),
                   ),
                 )
               else
@@ -112,13 +111,13 @@ class StatisticsScreen extends ConsumerWidget {
       label: Text(label),
       selected: selected,
       selectedColor: AppTheme.accent,
-      backgroundColor: AppTheme.onSurface(alpha: 0.10),
+      backgroundColor: AppTheme.surface,
       labelStyle: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: selected ? Colors.white : AppTheme.textSecondary,
       ),
-      side: BorderSide.none,
+      side: BorderSide(color: AppTheme.dividerColor, width: 1),
       showCheckmark: false,
       onSelected: (_) => ref.read(trendRangeProvider.notifier).state = value,
     );
@@ -135,13 +134,13 @@ class StatisticsScreen extends ConsumerWidget {
           label: Text(label),
           selected: selected,
           selectedColor: selectedColor ?? AppTheme.accent,
-          backgroundColor: AppTheme.onSurface(alpha: 0.06),
+          backgroundColor: AppTheme.surface,
           labelStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: selected ? Colors.white : AppTheme.textSecondary,
           ),
-          side: BorderSide.none,
+          side: BorderSide(color: AppTheme.dividerColor, width: 1),
           showCheckmark: false,
           onSelected: (_) =>
               ref.read(trendCategoryFilterProvider.notifier).state = value,

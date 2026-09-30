@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,10 +18,10 @@ import 'data_management/data_management_screen.dart';
 import 'ledger/ledger_screen.dart';
 import 'statistics/statistics_screen.dart';
 
-/// 应用主框架：
-/// - 手机（宽 < 800）：BottomAppBar + 居中缺口 FAB
-/// - 桌面（宽 >= 800）：NavigationRail 侧边栏 + 右下角扩展 FAB
-/// - Windows：关闭窗口最小化到系统托盘；托盘右键菜单（显示主窗口/快速记账/退出）
+/// 应用主框架（数字优先设计语言）：
+/// - 手机（宽 < 800）：极简纯色底部导航 + 居中 FAB
+/// - 桌面（宽 >= 800）：NavigationRail 侧边栏 + 右下角 FAB
+/// - Windows：关闭窗口最小化到系统托盘；托盘右键菜单
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -62,10 +61,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.dispose();
   }
 
-  /// Windows：拦截关闭事件 + 设置托盘图标与右键菜单
   Future<void> _setupDesktopIntegration() async {
     try {
-      // 点击窗口关闭按钮时不退出，改为隐藏到托盘
       await windowManager.setPreventClose(true);
       await trayManager.setIcon('assets/tray_icon.ico');
       await trayManager.setToolTip('智慧记账');
@@ -76,30 +73,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           MenuItem(key: 'exit', label: '退出'),
         ]),
       );
-    } catch (_) {
-      // 插件尚未就绪（如测试环境）时忽略
-    }
+    } catch (_) {}
   }
 
-  // ---------- 窗口事件 ----------
   @override
-  void onWindowClose() async {
-    // 拦截关闭：隐藏窗口，程序驻留托盘
-    await windowManager.hide();
-  }
+  void onWindowClose() async => await windowManager.hide();
 
-  // ---------- 托盘事件 ----------
   @override
   void onTrayIconMouseDown() {
-    // 左键点击托盘图标：显示主窗口
     windowManager.show();
     windowManager.focus();
   }
 
   @override
-  void onTrayIconRightMouseDown() {
-    trayManager.popUpContextMenu();
-  }
+  void onTrayIconRightMouseDown() => trayManager.popUpContextMenu();
 
   @override
   void onTrayMenuItemClick(MenuItem menuItem) {
@@ -128,8 +115,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   void _openAddSheet() => AddTransactionSheet.show(context);
 
-  /// 一句话记账：输入如“午饭 32”“打车 25.5”“工资 8000”，
-  /// 复用 OCR 解析引擎识别金额/分类后进入确认表单
   Future<void> _openTextAdd() async {
     final ctrl = TextEditingController();
     final text = await showDialog<String>(
@@ -143,20 +128,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           maxLines: 2,
           decoration: const InputDecoration(
             hintText: '例如：午饭 32 / 打车 25.5 / 工资 8000',
-            border: OutlineInputBorder(),
           ),
           onSubmitted: (_) => Navigator.pop(ctx, ctrl.text.trim()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text('取消',
+                style: TextStyle(color: AppTheme.textSecondary)),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              foregroundColor: Colors.white,
-            ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppTheme.accent),
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             child: const Text('识别'),
           ),
@@ -170,9 +152,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (r.amount == null) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(
-          content: Text('未识别到金额，请检查输入（如：午饭 32）'),
-          duration: Duration(seconds: 2),
+        ..showSnackBar(SnackBar(
+          content: const Text('未识别到金额，请检查输入（如：午饭 32）'),
+          duration: const Duration(seconds: 2),
         ));
       return;
     }
@@ -190,7 +172,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final desktop = Responsive.isDesktop(context);
-    // 监听背景主题：切换主题时重建本页，底部导航/浮动按钮等动态色立即刷新
     ref.watch(backgroundThemeProvider);
 
     return GradientBackground(
@@ -204,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 children: [
                   _textAddFab('fab_text_desktop'),
                   const SizedBox(height: 12),
-                  _gradientAddButton(onTap: _openAddSheet, extended: true),
+                  _addButton(onTap: _openAddSheet, extended: true),
                 ],
               )
             : Column(
@@ -212,53 +193,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 children: [
                   _textAddFab('fab_text_mobile'),
                   const SizedBox(height: 10),
-                  _gradientAddButton(onTap: _openAddSheet),
+                  _addButton(onTap: _openAddSheet),
                 ],
               ),
         floatingActionButtonLocation: desktop
             ? FloatingActionButtonLocation.endFloat
             : FloatingActionButtonLocation.centerFloat,
-        bottomNavigationBar: desktop ? null : _buildGlassBottomBar(),
+        bottomNavigationBar: desktop ? null : _buildBottomBar(),
       ),
     );
   }
 
-  /// 一句话记账小按钮（主按钮上方）：磨砂玻璃圆钮
+  /// 一句话记账小按钮：纯色 + 描边
   Widget _textAddFab(String heroTag) {
     return FloatingActionButton.small(
       heroTag: heroTag,
-      backgroundColor: AppTheme.glassFillStrong,
-      elevation: 2,
-      foregroundColor: AppTheme.isDark ? AppTheme.accentLight : AppTheme.accent,
+      backgroundColor: AppTheme.cardColor,
+      elevation: 0,
+      foregroundColor: AppTheme.accent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: AppTheme.dividerColor, width: 1),
+      ),
       tooltip: '一句话记账（如：午饭 32）',
       onPressed: _openTextAdd,
-      child: const Icon(Icons.edit_note_rounded, size: 22),
+      child: const Icon(Icons.edit_outlined, size: 20),
     );
   }
 
-  /// 渐变主按钮：手机为 58 圆角方块，桌面为横向胶囊
-  Widget _gradientAddButton(
-      {required VoidCallback onTap, bool extended = false}) {
-    final radius = BorderRadius.circular(extended ? 26 : 20);
+  /// 主按钮：纯 teal 圆形 / 桌面胶囊（无渐变、无发光阴影）
+  Widget _addButton({required VoidCallback onTap, bool extended = false}) {
+    final radius = BorderRadius.circular(extended ? 14 : 18);
     return Tooltip(
       message: '记一笔',
       child: Container(
-        height: extended ? 52 : 58,
+        height: extended ? 48 : 56,
+        width: extended ? null : 56,
         padding:
-            extended ? const EdgeInsets.symmetric(horizontal: 22) : null,
+            extended ? const EdgeInsets.symmetric(horizontal: 20) : null,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: AppTheme.accentGradient,
-          ),
+          color: AppTheme.accent,
           borderRadius: radius,
-          boxShadow: const [
-            BoxShadow(
-                color: AppTheme.accentGlow,
-                blurRadius: 18,
-                offset: Offset(0, 8)),
-          ],
         ),
         child: Material(
           color: Colors.transparent,
@@ -269,14 +244,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+                const Icon(Icons.add_rounded, color: Colors.white, size: 26),
                 if (extended) ...[
                   const SizedBox(width: 8),
                   const Text('记一笔',
                       style: TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15)),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14)),
                 ],
               ],
             ),
@@ -295,16 +270,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           onDestinationSelected: (i) => setState(() => _index = i),
           labelType: NavigationRailLabelType.all,
           groupAlignment: -0.85,
-          backgroundColor: AppTheme.cardColor.withValues(alpha: 0.55),
+          backgroundColor: AppTheme.cardColor,
           selectedIconTheme: const IconThemeData(color: AppTheme.accent),
           selectedLabelTextStyle: const TextStyle(
             color: AppTheme.accent,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
           unselectedIconTheme:
-              IconThemeData(color: AppTheme.onSurface(alpha: 0.55)),
+              IconThemeData(color: AppTheme.textSecondary),
           unselectedLabelTextStyle:
-              TextStyle(color: AppTheme.onSurface(alpha: 0.55)),
+              TextStyle(color: AppTheme.textSecondary),
           indicatorColor: AppTheme.accentBg,
           destinations: const [
             NavigationRailDestination(
@@ -343,11 +318,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return IndexedStack(index: _index, children: _pages);
   }
 
-  /// 手机端：悬浮玻璃导航栏（模糊 + 高光描边 + 渐变选中胶囊）
-  Widget _buildGlassBottomBar() {
+  /// 手机端底部导航：纯色 + 1px 顶部分隔线，选中态文字色变化
+  Widget _buildBottomBar() {
     Widget item(int i, IconData icon, String label) {
       final selected = _index == i;
-      final dim = AppTheme.onSurface(alpha: 0.55);
+      final color = selected ? AppTheme.accent : AppTheme.textSecondary;
       return Expanded(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -355,41 +330,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
-                decoration: BoxDecoration(
-                  gradient: selected
-                      ? const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: AppTheme.accentGradient,
-                        )
-                      : null,
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: selected
-                      ? const [
-                          BoxShadow(
-                              color: AppTheme.accentGlow,
-                              blurRadius: 10,
-                              offset: Offset(0, 4)),
-                        ]
-                      : null,
-                ),
-                child: Icon(icon,
-                    size: 20, color: selected ? Colors.white : dim),
-              ),
-              const SizedBox(height: 3),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 220),
+              Icon(icon, size: 22, color: color),
+              const SizedBox(height: 4),
+              Text(
+                label,
                 style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected ? AppTheme.accent : dim,
+                  fontSize: 11,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  color: color,
                 ),
-                child: Text(label),
               ),
             ],
           ),
@@ -399,40 +348,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: AppTheme.glassShadow,
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: AppTheme.cardColor,
+          border: Border(
+            top: BorderSide(color: AppTheme.dividerColor, width: 1),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-              child: Container(
-                height: 64,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [AppTheme.glassFillStrong, AppTheme.glassFill],
-                  ),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: AppTheme.glassBorder),
-                ),
-                child: Row(
-                  children: [
-                    item(0, Icons.dashboard_rounded, '仪表盘'),
-                    item(1, Icons.insights_rounded, '统计'),
-                    const SizedBox(width: 60), // 居中悬浮主按钮留位
-                    item(2, Icons.receipt_long_rounded, '流水'),
-                    item(3, Icons.folder_rounded, '数据'),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        ),
+        child: Row(
+          children: [
+            item(0, Icons.dashboard_outlined, '仪表盘'),
+            item(1, Icons.insights_outlined, '统计'),
+            const SizedBox(width: 60),
+            item(2, Icons.receipt_long_outlined, '流水'),
+            item(3, Icons.folder_outlined, '数据'),
+          ],
         ),
       ),
     );

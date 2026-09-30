@@ -1,20 +1,26 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../utils/app_theme.dart';
+import '../viewmodels/theme_providers.dart';
 
-/// 玻璃拟态卡片：背景高斯模糊 + 半透明渐变填充 + 顶部高光描边 + 柔影
-/// （Glassmorphism：frosted glass / light reflection / z-depth）
+/// 卡片容器
 ///
-/// 传入 [color] 时使用指定纯色填充（不随主题做透明渐变），
-/// 但仍保留模糊、描边与阴影，保证视觉统一。
-class GlassCard extends StatelessWidget {
+/// 设计语言：数字优先（Linear / Things 3 风格）
+/// 根据自定义背景的 cardMode 呈现三种样式：
+/// - CardMode.solid：纯色背景 + 1px 描边（默认，无背景可见）
+/// - CardMode.glass：毛玻璃（BackdropFilter 模糊 + 半透明色 + 描边）
+/// - CardMode.transparent：半透明纯色（背景清晰透出，无模糊）
+///
+/// 保留 API（child/padding/borderRadius/color）向后兼容
+class GlassCard extends ConsumerWidget {
   const GlassCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
-    this.borderRadius = 20,
+    this.borderRadius = 16,
     this.color,
   });
 
@@ -24,34 +30,66 @@ class GlassCard extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(borderRadius);
-    return Container(
-      decoration: BoxDecoration(borderRadius: radius, boxShadow: AppTheme.glassShadow),
-      child: ClipRRect(
-        borderRadius: radius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: AppTheme.glassBlurSigma,
-            sigmaY: AppTheme.glassBlurSigma,
-          ),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: color != null
-                    ? [color!, color!]
-                    : [AppTheme.glassFillStrong, AppTheme.glassFill],
-              ),
-              borderRadius: radius,
-              border: Border.all(color: AppTheme.glassBorder),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active = ref.watch(customBackgroundsProvider).active;
+    final mode = active?.cardMode ?? CardMode.solid;
+    final glassBlur = active?.glassBlur ?? 12.0;
+    final glassColor = active != null ? Color(active.glassColor) : Colors.white;
+    final glassAlpha = active?.glassAlpha ?? 0.3;
+
+    final cardColor = color ?? AppTheme.cardColor;
+
+    switch (mode) {
+      case CardMode.glass:
+        // 毛玻璃：背景模糊后透出卡片
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: glassBlur,
+              sigmaY: glassBlur,
+              tileMode: TileMode.clamp,
             ),
-            child: child,
+            child: Container(
+              padding: padding,
+              decoration: BoxDecoration(
+                color: glassColor.withValues(alpha: glassAlpha),
+                borderRadius: BorderRadius.circular(borderRadius),
+                border: Border.all(
+                  color: AppTheme.dividerColor.withValues(alpha: 0.6),
+                  width: 1,
+                ),
+              ),
+              child: child,
+            ),
           ),
-        ),
-      ),
-    );
+        );
+      case CardMode.transparent:
+        // 半透明纯色：背景清晰透出，无模糊
+        return Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            color: glassColor.withValues(alpha: glassAlpha),
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(
+              color: AppTheme.dividerColor.withValues(alpha: 0.6),
+              width: 1,
+            ),
+          ),
+          child: child,
+        );
+      case CardMode.solid:
+      default:
+        // 纯色卡片 + 1px 描边
+        return Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(color: AppTheme.dividerColor, width: 1),
+          ),
+          child: child,
+        );
+    }
   }
 }

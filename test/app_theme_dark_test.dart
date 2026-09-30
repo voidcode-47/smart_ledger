@@ -10,7 +10,7 @@ void main() {
   test('默认浅色模式：白卡片、深色文字、黑辅助文字', () {
     expect(AppTheme.isDark, isFalse);
     expect(AppTheme.cardColor, const Color(0xFFFFFFFF));
-    expect(AppTheme.textPrimary, const Color(0xFF1F2937));
+    expect(AppTheme.textPrimary, const Color(0xFF0A0A0A));
     expect(AppTheme.onSurface(), Colors.black);
   });
 
@@ -27,7 +27,7 @@ void main() {
     AppTheme.setDark(true);
     AppTheme.setDark(false);
     expect(AppTheme.cardColor, const Color(0xFFFFFFFF));
-    expect(AppTheme.textPrimary, const Color(0xFF1F2937));
+    expect(AppTheme.textPrimary, const Color(0xFF0A0A0A));
   });
 
   test('darkTheme 为深色亮度，light theme 为浅色亮度', () {

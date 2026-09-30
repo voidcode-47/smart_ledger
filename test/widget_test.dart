@@ -18,6 +18,6 @@ void main() {
     expect(find.text('仪表盘'), findsOneWidget);
     expect(find.text('收入'), findsOneWidget);
     expect(find.text('支出'), findsOneWidget);
-    expect(find.text('结余'), findsOneWidget);
+    expect(find.text('本月结余'), findsOneWidget);
   });
 }
